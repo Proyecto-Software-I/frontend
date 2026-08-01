@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://nextjs.org/icons/next.svg" width="110" alt="Logo de Next.js" />
+<img src="https://nextjs.org/_next/static/immutable/media/nextjs-logotype-dark.3h4a2z2v_dkod.svg" width="110" alt="Logo de Next.js" />
 
 # Proyecto Software I — Frontend
 
