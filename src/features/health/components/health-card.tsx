@@ -1,5 +1,15 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useHealth } from "../hooks/use-health";
 
 export function HealthCard() {
@@ -14,66 +24,94 @@ export function HealthCard() {
   const isLoading = status === "loading";
   const isOnline = status === "online";
 
+  const badgeVariant =
+      status === "online"
+          ? "default"
+          : status === "offline"
+              ? "destructive"
+              : "secondary";
+
+  const statusLabel =
+      status === "online"
+          ? "Backend disponible"
+          : status === "offline"
+              ? "Backend no disponible"
+              : "Comprobando";
+
+  const description =
+      status === "online" && data
+          ? `Servicio: ${data.service}`
+          : status === "loading"
+              ? "Intentando conectar con el backend."
+              : error ?? "No fue posible conectar con el backend.";
+
   return (
-    <section
-      className="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 p-8 shadow-2xl"
-      aria-live="polite"
-      aria-busy={isLoading}
-    >
-      <p className="text-sm font-medium text-blue-300">
-        Proyecto Software I
-      </p>
+      <Card
+          className="w-full max-w-xl"
+          aria-live="polite"
+          aria-busy={isLoading}
+      >
+        <CardHeader>
+          <Badge
+              variant={badgeVariant}
+              className="w-fit"
+          >
+            {statusLabel}
+          </Badge>
 
-      <h1 className="mt-3 text-3xl font-semibold text-white">
-        Estado del backend
-      </h1>
+          <CardTitle className="text-2xl">
+            Estado del backend
+          </CardTitle>
 
-      <div className="mt-8 rounded-2xl border border-white/10 bg-slate-950 p-6">
-        <div className="flex items-center gap-3">
-          <span
-            className={[
-              "h-3 w-3 rounded-full",
-              isLoading
-                ? "animate-pulse bg-amber-400"
-                : isOnline
-                  ? "bg-emerald-400"
-                  : "bg-rose-400",
-            ].join(" ")}
-          />
+          <CardDescription>
+            Comprueba la comunicación entre el frontend y la API.
+          </CardDescription>
+        </CardHeader>
 
-          <span className="font-medium text-white">
+        <CardContent className="space-y-5">
+          <div>
+            <p className="text-sm font-medium">
+              Resultado
+            </p>
+
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {description}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium">
+              Última comprobación
+            </p>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              {checkedAt
+                  ? checkedAt.toLocaleTimeString("es-BO", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })
+                  : "Pendiente"}
+            </p>
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            Endpoint de diagnóstico del backend
+          </p>
+
+          <Button
+              type="button"
+              onClick={() => void refresh()}
+              disabled={isLoading}
+              variant={isOnline ? "outline" : "default"}
+          >
             {isLoading
-              ? "Comprobando"
-              : isOnline
-                ? "Backend disponible"
-                : "Backend no disponible"}
-          </span>
-        </div>
-
-        <p className="mt-4 text-sm text-slate-400">
-          {isOnline
-            ? `Servicio: ${data?.service}`
-            : error ?? "Esperando respuesta."}
-        </p>
-
-        <p className="mt-2 text-xs text-slate-600">
-          Última comprobación:{" "}
-          {checkedAt
-            ? checkedAt.toLocaleTimeString("es-BO")
-            : "Pendiente"}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => void refresh()}
-          disabled={isLoading}
-          className="mt-6 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
-        >
-          {isLoading
-            ? "Comprobando..."
-            : "Volver a comprobar"}
-        </button>
-      </div>
-    </section>
+                ? "Comprobando..."
+                : "Volver a comprobar"}
+          </Button>
+        </CardFooter>
+      </Card>
   );
 }
