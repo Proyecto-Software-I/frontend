@@ -20,10 +20,6 @@ Interfaz web de **Proyecto-Software-I**, desarrollada con Next.js, React y TypeS
 
 Frontend de **Proyecto-Software-I**, construido con Next.js, React y TypeScript.
 
-El nombre definitivo de la aplicación todavía no ha sido establecido.
-
-Actualmente, la página principal comprueba la comunicación con el backend mediante su endpoint de estado.
-
 El backend se encuentra en un repositorio separado:
 
 - [`Proyecto-Software-I/backend`](https://github.com/Proyecto-Software-I/backend)
@@ -151,12 +147,6 @@ Respuesta esperada:
 npm run lint
 npm run build
 ```
-
-## Estado del proyecto
-
-El proyecto se encuentra en desarrollo.
-
-El nombre, estructura y funcionalidades definitivas se establecerán cuando el equipo defina el alcance del sistema.
 
 ## Contribución
 
