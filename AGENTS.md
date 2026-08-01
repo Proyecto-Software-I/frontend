@@ -226,41 +226,244 @@ No subas:
 
 Cuando agregues una variable necesaria para ejecutar el proyecto, actualiza también `.env.example` con un valor no sensible.
 
-## Interfaz y estilos
+## Sistema de diseño y shadcn/ui
 
-Utiliza Tailwind CSS siguiendo el estilo existente.
+Este proyecto utiliza:
 
-No introduzcas otra biblioteca visual sin autorización.
+* Tailwind CSS.
+* shadcn/ui.
+* Radix UI.
+* Variables CSS.
+* Tokens semánticos.
+* Componentes compartidos en `src/components/ui`.
 
-No reemplaces la identidad visual completa por iniciativa propia.
+La configuración de shadcn/ui se encuentra en:
 
-Mientras no exista un diseño oficial:
+```text
+components.json
+```
 
-* Mantén una interfaz simple.
-* Utiliza jerarquía visual clara.
-* Evita colores excesivos.
-* Evita animaciones innecesarias.
-* Mantén consistencia entre pantallas.
-* Prioriza legibilidad y accesibilidad.
+Los tokens globales se encuentran en:
 
-La interfaz debe funcionar razonablemente en pantallas móviles y de escritorio.
+```text
+src/app/globals.css
+```
 
-## Accesibilidad
+La utilidad compartida para combinar clases se encuentra en:
 
-Todo cambio de interfaz debe considerar:
+```text
+src/lib/utils.ts
+```
 
-* HTML semántico.
-* Etiquetas asociadas a inputs.
-* Navegación con teclado.
-* Estados de foco visibles.
-* Texto alternativo para imágenes relevantes.
-* Botones reales para acciones.
-* Enlaces reales para navegación.
-* Mensajes de error comprensibles.
-* Contraste suficiente.
-* Estados `disabled` cuando corresponda.
+### Fuente de componentes
 
-No utilices un `div` con `onClick` cuando corresponde utilizar un `button`.
+Antes de crear un elemento visual:
+
+1. Revisa `src/components/ui`.
+2. Reutiliza un componente existente cuando sea posible.
+3. Revisa si shadcn/ui ofrece el componente necesario.
+4. Comprueba los patrones existentes en el repositorio.
+5. Instala un componente nuevo únicamente si la issue lo requiere.
+
+Los componentes nuevos de shadcn/ui deben agregarse mediante:
+
+```bash
+npx shadcn@latest add nombre-del-componente
+```
+
+No copies manualmente componentes desde sitios externos.
+
+No utilices:
+
+```bash
+npx shadcn@latest add --all
+```
+
+No utilices `--overwrite` o `--force` sin autorización explícita.
+
+### Componentes compartidos
+
+Los controles básicos deben reutilizar los componentes disponibles en:
+
+```text
+src/components/ui
+```
+
+Ejemplos:
+
+* Los botones deben utilizar `Button`.
+* Las tarjetas deben utilizar `Card`.
+* Las etiquetas de estado deben utilizar `Badge`.
+* Las separaciones visuales deben utilizar `Separator`.
+* Los inputs deberán utilizar `Input` cuando sea incorporado.
+* Los diálogos deberán utilizar `Dialog` cuando sea incorporado.
+
+No recrees controles básicos mediante elementos HTML y listas extensas de clases si ya existe un componente compartido equivalente.
+
+### Tokens semánticos
+
+Utiliza tokens que describan la función visual:
+
+```text
+background
+foreground
+card
+card-foreground
+primary
+primary-foreground
+secondary
+secondary-foreground
+muted
+muted-foreground
+accent
+accent-foreground
+destructive
+border
+input
+ring
+```
+
+Ejemplos permitidos:
+
+```tsx
+<div className="bg-background text-foreground" />
+
+<Card className="border-border" />
+
+<p className="text-muted-foreground" />
+
+<Button variant="destructive">
+  Eliminar
+</Button>
+```
+
+No utilices directamente:
+
+* Colores de Tailwind como `blue-*`, `red-*`, `green-*`, `slate-*` o `gray-*`.
+* Colores hexadecimales.
+* Valores RGB, HSL u OKLCH dentro de componentes.
+* Clases arbitrarias como `bg-[#123456]`.
+* Estilos inline para decisiones visuales.
+* Sombras personalizadas dentro de componentes.
+* Radios arbitrarios.
+* Espaciados arbitrarios salvo necesidad técnica explícita.
+
+No nombres un token por su color concreto.
+
+Permitido:
+
+```text
+primary
+destructive
+muted
+surface
+```
+
+No permitido:
+
+```text
+blue-button
+red-error
+gray-card
+green-success-box
+```
+
+### Responsabilidades
+
+`src/components/ui` contiene componentes visuales genéricos.
+
+`src/features/*/components` contiene componentes relacionados con una funcionalidad concreta.
+
+`src/app` contiene páginas, layouts y composición de funcionalidades.
+
+Las páginas no deben redefinir controles básicos. Deben componer componentes compartidos y componentes de funcionalidades.
+
+### Modificaciones de componentes
+
+Los archivos de `src/components/ui` forman parte de la base visual compartida.
+
+No los modifiques para resolver una necesidad exclusiva de una pantalla.
+
+Antes de modificar un componente compartido, comprueba:
+
+1. Si la necesidad puede resolverse mediante sus props.
+2. Si puede utilizarse `className` sin cambiar su comportamiento global.
+3. Si corresponde crear un componente de feature que lo envuelva.
+4. Si el cambio afectará otras páginas.
+
+Los cambios en componentes compartidos deben estar incluidos expresamente en la issue y explicarse en el Pull Request.
+
+### Nuevas dependencias visuales
+
+No agregues otra biblioteca de interfaz sin autorización.
+
+No mezcles shadcn/ui con:
+
+* Material UI.
+* Chakra UI.
+* Mantine.
+* Ant Design.
+* Bootstrap.
+* DaisyUI.
+* Otra biblioteca de componentes completa.
+
+No agregues una dependencia para resolver un elemento pequeño que pueda construirse utilizando los componentes existentes.
+
+### Estados de interfaz
+
+Los componentes interactivos deben considerar, cuando corresponda:
+
+* Estado normal.
+* Hover.
+* Foco.
+* Disabled.
+* Loading.
+* Error.
+* Vacío.
+* Éxito.
+
+No implementes únicamente el caso exitoso.
+
+### Accesibilidad
+
+Conserva las propiedades y estructuras accesibles incluidas en los componentes de shadcn/ui y Radix UI.
+
+No elimines:
+
+* Roles ARIA necesarios.
+* Etiquetas accesibles.
+* Estados `disabled`.
+* Manejo de foco.
+* Navegación por teclado.
+* Texto alternativo.
+* Asociaciones entre labels e inputs.
+
+No reemplaces un elemento semántico por un `div` interactivo.
+
+### Verificación
+
+Para consultar la configuración de shadcn/ui:
+
+```bash
+npx shadcn@latest info
+```
+
+Antes de finalizar un cambio visual:
+
+```bash
+npm run lint
+npm run build
+```
+
+También comprueba manualmente:
+
+* Vista móvil.
+* Vista de escritorio.
+* Navegación mediante teclado.
+* Estados de carga y error.
+* Ausencia de errores de hidratación.
+* Ausencia de errores en la consola.
+* Ausencia de colores o estilos arbitrarios.
 
 ## Seguridad
 
@@ -353,6 +556,10 @@ tsconfig.json
 eslint.config.mjs
 postcss.config.mjs
 .env.example
+components.json
+src/app/globals.css
+src/components/ui/**
+src/lib/utils.ts
 ```
 
 Los cambios en estos archivos deben explicarse en el Pull Request.
