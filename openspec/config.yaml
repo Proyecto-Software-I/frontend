@@ -1,0 +1,66 @@
+schema: spec-driven
+
+context: |
+  Repository: Proyecto-Software-I/frontend.
+  Stack: Node.js 24, Next.js App Router, React, TypeScript strict, Tailwind CSS,
+  shadcn/ui and npm.
+  Architecture: app routes, feature modules, shared UI components, hooks and
+  API modules.
+  Design system: semantic CSS tokens and shared components under
+  src/components/ui.
+  Backend repository: Proyecto-Software-I/backend.
+  GitHub Issues define assignment, scope and acceptance criteria.
+  AGENTS.md defines permanent repository constraints.
+  Pull requests use Rebase and merge.
+  Application code must not be implemented before the planning Draft PR has
+  been reviewed and explicitly approved by the repository maintainer.
+
+rules:
+  proposal:
+    - Include the full GitHub issue reference.
+    - State clearly what is in scope and out of scope.
+    - Identify whether the backend is affected.
+    - Do not invent branding, navigation or product requirements.
+    - Identify affected routes, components and interface states.
+    - Do not include implementation code.
+
+  specs:
+    - Describe behavior visible to the user.
+    - Use Given, When and Then scenarios.
+    - Include loading, success, empty, validation and error states.
+    - Include mobile and desktop behavior when applicable.
+    - Include accessibility expectations.
+    - Document dependencies on backend contracts.
+
+  design:
+    - Use Server Components by default.
+    - Use Client Components only when interactivity requires them.
+    - Keep API calls outside visual components.
+    - Reuse components from src/components/ui.
+    - Use semantic design tokens.
+    - Explain every new dependency.
+    - Do not introduce another UI component library.
+
+  tasks:
+    - Keep tasks small, ordered and independently verifiable.
+    - Separate API access, state management and presentation.
+    - Include responsive and accessibility verification.
+    - Include loading and error behavior.
+    - Include lint and build as the final verification tasks.
+
+operations:
+  apply:
+    guidance:
+      - Modify only files required by the approved change.
+      - Stop if implementation requires changing the approved scope.
+      - Do not introduce arbitrary colors or inline visual styles.
+      - Do not disable ESLint or TypeScript rules.
+      - Do not push directly to main.
+      - Reuse existing UI components before creating new ones.
+
+  archive:
+    guidance:
+      - Do not archive while tasks remain incomplete.
+      - Confirm that implementation and specifications agree.
+      - Confirm that lint and build passed.
+      - Keep the archived change linked to its GitHub issue.
