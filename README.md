@@ -34,9 +34,10 @@ El backend se encuentra en un repositorio separado:
 
 ## Requisitos
 
-- Node.js 24 LTS.
-- npm.
-- Git.
+* Node.js 24 LTS.
+* npm.
+* Git.
+* OpenSpec CLI.
 
 Comprueba las versiones instaladas:
 
@@ -44,6 +45,7 @@ Comprueba las versiones instaladas:
 node --version
 npm --version
 git --version
+openspec --version
 ```
 
 ## Instalación
@@ -59,6 +61,18 @@ Instala las dependencias:
 
 ```bash
 npm install
+```
+
+Instala OpenSpec globalmente:
+
+```bash
+npm install --global @fission-ai/openspec@latest
+```
+
+Comprueba la instalación:
+
+```bash
+openspec --version
 ```
 
 ## Variables de entorno
