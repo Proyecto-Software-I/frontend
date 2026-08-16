@@ -1,7 +1,8 @@
 # public-landing-page Specification
 
 ## Purpose
-TBD - created by archiving change 8-public-landing-page. Update Purpose after archive.
+
+Defines the public LegacyLift Landing Page at `/`, replacing the provisional home page with static product messaging, internal section navigation, and CTAs to `/auth/login` and `/auth/register`.
 
 ## Requirements
 
