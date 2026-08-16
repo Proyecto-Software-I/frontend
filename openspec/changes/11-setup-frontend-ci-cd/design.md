@@ -1,126 +1,166 @@
 ## Context
 
-See `proposal.md` for motivation and scope. The current repository has no `.github/workflows/` directory, no existing GitHub Actions workflows, no Vercel/Firebase configuration files, and no automated test script. The project uses npm with `package-lock.json`, Next.js `16.2.12`, and repository documentation requires Node.js 24 LTS.
+See `proposal.md` for motivation and scope. The current repository already has a GitHub Actions CI workflow that validates Pull Requests targeting `main` with Node.js 24, `npm ci`, OpenSpec CLI setup, `npm run spec:validate`, `npm run lint`, and `npm run build`.
 
-The only frontend environment variable currently used by application code is `NEXT_PUBLIC_API_URL`, read by `src/lib/api/api-client.ts`. Because it is prefixed with `NEXT_PUBLIC_`, it is exposed to browser code and must not contain secrets. `.env*` files are ignored, `.env.example` is allowed, and `.vercel` is ignored.
+The previously planned CD path used Vercel native Git integration. That path is now blocked because the current Vercel Hobby scope cannot use Git integration for the organization repository. The repository owner instructed that deployments must instead run from GitHub Actions through the official Vercel CLI, using GitHub Secrets. If the assignee cannot create repository secrets with `gh secret set` after approval, the blocker must be documented and the owner must add the secrets.
+
+Vercel CLI documentation supports the intended reproducible flow: `vercel pull` fetches project settings and environment variables for a target environment, `vercel build` creates Build Output API artifacts under `.vercel/output`, and `vercel deploy --prebuilt` deploys those artifacts. The `--prod` flag is used for production deployments; by default `vercel build` uses Preview environment variables and `vercel deploy` without `--prod` creates a Preview deployment after the first-project-deployment caveat noted by Vercel.
+
+The only frontend environment variable currently used by application code is `NEXT_PUBLIC_API_URL`, read by `src/lib/api/api-client.ts`. Because it is prefixed with `NEXT_PUBLIC_`, it is exposed to browser code and must not contain secrets. `.env*` files are ignored, `.env.example` is allowed, and `.vercel` is ignored and must remain uncommitted.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Add a focused CI workflow for Pull Requests targeting `main`.
-- Use Node.js 24, npm cache when appropriate, and explicit CI steps for `npm ci`, `npm run spec:validate`, `npm run lint`, and `npm run build`.
-- Keep deployment managed by Vercel's GitHub integration instead of custom deploy commands in GitHub Actions.
-- Document Vercel setup, `main` production behavior, Preview Deployments, environment variables, and required external permissions.
-- Preserve existing frontend application behavior.
+- Preserve the existing CI validation steps and do not degrade their coverage or diagnostics.
+- Deploy Preview builds from Pull Requests targeting `main` through GitHub Actions and Vercel CLI only after CI passes.
+- Deploy Production builds through GitHub Actions and Vercel CLI only for `push` events to `main` or an equivalent approved event representing changes already integrated into `main`.
+- Use GitHub repository secrets for Vercel CLI authentication and project identification.
+- Keep Preview deployments non-production by omitting `--prod` and using Preview environment configuration.
+- Use production mode only for the Production workflow from `main`.
+- Document how to verify required secrets exist without printing values.
+- Document how to obtain or expose the Preview URL from Vercel CLI output when viable without adding an unapproved PR-comment dependency.
 
 **Non-Goals:**
+- No native Vercel Git integration requirement for this issue.
+- No cloning the organization repository into a personal GitHub account to bypass Vercel scope limits.
 - No backend CI/CD or backend repository changes.
 - No GitHub ruleset, branch protection, or `main` protection changes.
-- No custom domain, observability add-ons, analytics, authentication, Firebase products, or third hosting platform.
+- No custom domain, observability add-ons, analytics, authentication, Firebase products, Google Cloud resources, or third hosting platform.
 - No paid plans, billing activation, or paid external resources.
-- No dependency additions or package manager changes.
+- No dependency additions or package manager changes unless explicitly approved in a revised plan.
 - No `package.json` `engines.node` change by default.
-- No `vercel.json` unless implementation discovers a concrete need and OpenSpec is updated before changing scope.
+- No committed `.vercel/`, `.env*`, tokens, project identifiers, or credentials.
 
 ## Decisions
 
-### Use Vercel For CD
+### Use Vercel CLI From GitHub Actions For CD
 
-Vercel will be the selected deployment platform. Vercel has first-party support for Next.js, supports Node.js `24.x`, integrates directly with GitHub, creates Preview Deployments for Pull Requests and branch pushes, and deploys production from the configured Production Branch, which will be `main`. Vercel also supports project-level environment variables scoped to Production, Preview, and Development.
+GitHub Actions will handle both CI and CD. Pull Request workflows will run CI first and then run a Vercel CLI Preview deployment only if CI succeeds. A separate Production path will run only for `push` to `main` or an approved equivalent event after changes are integrated into `main`.
 
-Alternative considered: Firebase App Hosting. Firebase App Hosting is technically valid for modern full-stack web apps, but it is less appropriate for this issue's constraints. Firebase pricing documentation lists App Hosting under paid-tier usage and marks it not applicable on Spark. Using App Hosting requires a Firebase project on Blaze/pay-as-you-go and underlying Google Cloud resources such as Cloud Run, Cloud Build, Artifact Registry, Cloud Logging, and Secret Manager. Issue #11 explicitly forbids activating billing, paid plans, or resources with cost without authorization, so Firebase App Hosting is not selected.
+Alternative considered: Vercel native Git integration. It remains desirable for standard Vercel projects, but it is not usable with the current Hobby scope for this organization repository and was explicitly replaced by the repository owner.
 
-### Keep CI In GitHub Actions And CD In Vercel
+### Use Official Vercel CLI With Prebuilt Deployments
 
-GitHub Actions will validate Pull Requests with repository scripts. Vercel's GitHub integration will handle deployments after the repository is connected externally. This avoids adding Vercel CLI, Vercel tokens, or custom deployment workflows to the repository.
-
-Alternative considered: Deploying to Vercel from GitHub Actions with Vercel CLI. That approach would require approved deployment secrets such as `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, plus workflow complexity for preview and production deploys. It is unnecessary while the standard Vercel Git integration satisfies the issue.
-
-### Use Current Repository Scripts
-
-The CI workflow will install dependencies with `npm ci` and run `npm run spec:validate`, `npm run lint`, and `npm run build` as separate named steps. Separate steps make failures easier to diagnose in GitHub Actions. The workflow will not use only `npm run check`, even though `npm run check` remains useful as a local/final validation command.
-
-Alternative considered: Use only `npm run check` in CI. That would run the right validation set today, but it would hide which required phase failed behind a single command. Issue #11 asks for diagnosable CI, so the workflow will expose OpenSpec validation, lint, and build separately.
-
-### Do Not Add A Test Command Yet
-
-No test framework, test config, test files, or `test` script currently exists. The workflow will not include `npm test` by default and will not invent a test command. If an applicable test suite appears before this issue is completed, it must be incorporated only if it remains within the approved scope or OpenSpec is updated before the change.
-
-Alternative considered: Add a test script or testing dependency as part of CI/CD. That would be outside issue #11's scope and would require separate approval for dependencies and test strategy.
-
-### Set Node.js 24 In CI And Vercel Settings
-
-The GitHub Actions workflow will explicitly use Node.js 24. Vercel should be configured to use Node.js 24 in project settings. No `package.json` `engines.node` field is planned by default because changing package metadata is not required to satisfy the issue and `package.json` is a protected file unless explicitly needed.
-
-Alternative considered: Add `engines.node` with `24.x` to `package.json`. This would make runtime intent portable, but it is an additional protected-file change. It can be revisited only if maintainers prefer pinning Node through package metadata.
-
-### Use Vercel Environment Variables For Deployment Configuration
-
-Development can continue using local environment files based on `.env.example`. Preview and Production deployments will use Vercel Environment Variables for `NEXT_PUBLIC_API_URL`. The plan will not invent concrete Production or Preview values; they must be provided or confirmed by the responsible maintainer. `.env.example` will not change unless a new variable is introduced.
-
-Alternative considered: Store deployment values in GitHub Actions secrets and pass them into a deployment workflow. That is unnecessary with native Vercel Git integration and would add secret-management complexity to the repository.
-
-### Document External Setup Instead Of Committing Platform State
-
-Vercel project connection, production branch selection, and deployment environment variables are configured in Vercel, not represented fully by committed repository files. The repository documentation will describe the required setup and verification steps.
-
-Alternative considered: Add `vercel.json`. No repository-level Vercel configuration is currently needed for this project because Vercel can detect Next.js and use the default build command. Adding `vercel.json` without a concrete need would increase configuration surface.
-
-## Proposed CI Shape
-
-The workflow will be planned for Pull Requests targeting `main` only:
+The deployment workflow will install the official Vercel CLI in GitHub Actions, authenticate using `VERCEL_TOKEN`, pull remote project settings for the target environment, build locally with Vercel, and deploy the prebuilt output. The planned command shape is:
 
 ```text
-PR -> main
+Preview PR:
+  vercel pull --yes --environment=preview
+  vercel build
+  vercel deploy --prebuilt
+
+Production main:
+  vercel pull --yes --environment=production
+  vercel build --prod
+  vercel deploy --prebuilt --prod
+```
+
+The implementation must verify exact syntax against the current Vercel CLI documentation before editing workflows. If the current CLI requires additional global options for token, scope, or project identification, the workflow should use environment variables or GitHub Secrets in a way that avoids printing secret values.
+
+Alternative considered: deploy source directly with `vercel deploy`. The prebuilt flow is preferred because Vercel documents `vercel build` plus `vercel deploy --prebuilt` for reproducible CI/CD workflows and it separates build failures from upload/deployment failures.
+
+### Use GitHub Repository Secrets For Vercel Credentials
+
+The workflow will require GitHub repository secrets for Vercel access. At minimum, the plan must evaluate:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+`VERCEL_TOKEN` should be exposed to the job or step as an environment variable if compatible with the Vercel CLI, instead of being written literally into command arguments. `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` should also come from repository secrets when needed to link the CI workspace to the Vercel project. No real values may appear in OpenSpec, README, workflow files, logs, issues, or commits.
+
+After the revised plan is approved, `gh secret set` may be attempted. If the assignee lacks permission to create repository secrets, implementation must stop for that part, document the blocker, and request that the owner add the required secrets.
+
+Alternative considered: committing `.vercel/project.json` or passing identifiers directly in workflow YAML. This is rejected because `.vercel/` is local state and project identifiers or tokens must not be committed.
+
+### Keep The Vercel Project Independent From Git Integration
+
+The Vercel Project may exist without being connected to the GitHub repository because deployments will be created by the CLI from GitHub Actions. The repository must not be cloned into a personal GitHub account to work around organization integration limits.
+
+If local `vercel link` creates `.vercel/project.json` to discover `orgId` or `projectId`, those values must be transferred to GitHub Secrets and `.vercel/` must remain ignored and uncommitted.
+
+Alternative considered: using a personal GitHub clone connected to Vercel. This is rejected because it would diverge from the organization repository and weaken deployment traceability.
+
+### Preserve CI Before CD
+
+The existing CI validation remains required. Preview deployment must be dependent on successful CI in the Pull Request workflow. Production deployment from `main` must also run the required validations before deploying, unless GitHub Actions already guarantees the same checked commit passed the same workflow in an approved way.
+
+Alternative considered: deploy first and rely on Vercel build failures. This is rejected because issue #11 requires explicit diagnosable CI and the existing CI must not be degraded.
+
+### Handle Preview URLs Without New Dependencies By Default
+
+Vercel CLI prints the deployment URL to standard output when deployment succeeds. The workflow can capture that output and expose it in GitHub Actions logs or job summary, provided secrets are not printed. Commenting directly on the PR should not introduce an additional action or dependency unless explicitly approved.
+
+Alternative considered: add a PR comment action by default. This is deferred because it would introduce an extra dependency solely for presentation convenience.
+
+### Keep `NEXT_PUBLIC_API_URL` Values Out Of Git
+
+`NEXT_PUBLIC_API_URL` is public client configuration, not a secret, but the real Preview and Production values must still be provided or confirmed by the responsible maintainer. The final workflow may rely on Vercel environment configuration pulled by `vercel pull`, or on GitHub Secrets/Variables passed into the Vercel build if that is the approved design. No concrete values will be invented or committed.
+
+Alternative considered: hard-code deployment backend URLs in workflow or README. This is rejected because environment-specific values must remain externally configured and maintainer-confirmed.
+
+## Proposed CI/CD Shape
+
+```text
+Pull Request -> main
   -> GitHub Actions
      -> checkout
      -> setup Node.js 24 with npm cache
      -> npm ci
+     -> install OpenSpec CLI
      -> npm run spec:validate
      -> npm run lint
      -> npm run build
+     -> install Vercel CLI
+     -> vercel pull --environment=preview
+     -> vercel build
+     -> vercel deploy --prebuilt
+     -> expose Preview URL without printing secrets
+
+push -> main
+  -> GitHub Actions
+     -> checkout
+     -> setup Node.js 24 with npm cache
+     -> npm ci
+     -> install OpenSpec CLI
+     -> npm run spec:validate
+     -> npm run lint
+     -> npm run build
+     -> install Vercel CLI
+     -> vercel pull --environment=production
+     -> vercel build --prod
+     -> vercel deploy --prebuilt --prod
 ```
 
-The job will fail automatically when any command exits non-zero. The workflow will not include `npm test` unless a valid test suite appears within the approved scope before completion.
-
-## Proposed CD Shape
-
-CD will use Vercel's native Git integration:
-
-```text
-GitHub repository: Proyecto-Software-I/frontend
-  |
-  +-- Pull Request / branch
-  |     -> Vercel Preview Deployment
-  |
-  +-- main
-        -> Vercel Production Deployment
-```
-
-Vercel will be configured externally with `main` as the Production Branch. Development branches must not replace Production. No Vercel token, Vercel CLI deployment workflow, Firebase configuration, or `vercel.json` is planned by default.
+Feature, chore, and other development branches must never deploy with `--prod`. Pull Request events must never run the Production deployment path.
 
 ## Risks / Trade-offs
 
-- [Risk] The assigned contributor may not have permission to install or configure the Vercel GitHub integration for `Proyecto-Software-I/frontend`. → Mitigation: document required permissions and request them in the issue before implementation/testing.
-- [Risk] `NEXT_PUBLIC_API_URL` values for production and previews may be unknown. → Mitigation: document the variable and require maintainers to provide non-secret backend URLs for each Vercel environment.
-- [Risk] Backend CORS may reject Vercel production or preview domains. → Mitigation: document as a backend coordination risk; do not change backend behavior in this frontend issue and coordinate through issue #11 or the backend repository if blocked.
-- [Risk] Vercel Hobby plan may not be appropriate if the project usage or ownership requires a paid plan. → Mitigation: keep the plan on no-cost setup only and stop if Vercel requires billing or a paid team configuration.
-- [Risk] Vercel Git integration creates deployment checks/comments that are external to repository files. → Mitigation: document how to verify deployment status from the Pull Request and Vercel dashboard.
-- [Trade-off] GitHub Actions CI and Vercel deployment checks are separate systems. → Mitigation: keep CI simple and deterministic, and use Vercel for deployment-specific feedback.
+- [Risk] The assignee may not have permission to create GitHub repository secrets. -> Mitigation: after approval, attempt `gh secret set` only if authorized; otherwise document the blocker and request owner action.
+- [Risk] Secret values could be leaked through workflow arguments or logs. -> Mitigation: use GitHub Secrets masking, prefer environment variables for tokens, avoid echoing values, and verify logs do not expose credentials.
+- [Risk] Missing `VERCEL_ORG_ID` or `VERCEL_PROJECT_ID` may prevent non-interactive CLI linking in CI. -> Mitigation: obtain identifiers from the Vercel project or local `.vercel/project.json`, store them as GitHub Secrets, and keep `.vercel/` uncommitted.
+- [Risk] Vercel notes the first deployment of a new project is always production even when `--prod` is omitted. -> Mitigation: confirm project state before relying on PR Preview behavior and document any required owner-provided initial setup if necessary.
+- [Risk] `NEXT_PUBLIC_API_URL` values for Preview and Production may be unknown. -> Mitigation: require maintainer-provided values in Vercel environment configuration or approved GitHub Secrets/Variables.
+- [Risk] Backend CORS may reject Vercel production or preview domains. -> Mitigation: document as backend coordination risk; do not change backend behavior in this frontend issue.
+- [Trade-off] Deployments become more explicit in repository workflows but require secret management and CLI maintenance. -> Mitigation: keep workflows minimal, use official CLI commands, and validate with real GitHub Actions runs.
 
 ## Migration Plan
 
-1. Add the GitHub Actions CI workflow for Pull Requests targeting `main` with explicit steps for checkout, Node.js 24, npm cache, `npm ci`, `npm run spec:validate`, `npm run lint`, and `npm run build`.
-2. Configure the Vercel project externally by importing the GitHub repository, selecting `main` as the Production Branch, confirming Node.js 24, and adding `NEXT_PUBLIC_API_URL` for Production and Preview using maintainer-provided values.
-3. Open or update the Pull Request for this issue and confirm GitHub Actions CI runs.
-4. Confirm Vercel creates a Preview Deployment for the issue branch or PR.
-5. After merge, confirm `main` creates a production deployment.
-6. If deployment setup fails without code changes, adjust Vercel project settings and documentation; if repository configuration must materially change, update OpenSpec and request approval again.
+1. Update OpenSpec and request a new `PLAN APPROVED` because the CD architecture changed materially.
+2. After approval, update GitHub Actions without degrading existing CI validation.
+3. Configure or request required repository secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`; configure `NEXT_PUBLIC_API_URL` through the approved environment mechanism.
+4. Add a Pull Request Preview deployment path that runs only after CI passes and never uses `--prod`.
+5. Add a Production deployment path that runs only from `push` to `main` or an approved equivalent integrated-main event and uses production mode.
+6. Verify the Preview URL is generated and available from GitHub Actions without printing secrets.
+7. Verify Production deployment from `main` when allowed by project flow and maintainer authorization.
+8. If secret creation, Vercel project configuration, paid plan requirements, or CLI behavior blocks implementation, stop and request a decision before changing scope.
 
-Rollback strategy: revert the CI workflow and documentation changes through a Pull Request if CI/CD must be removed. In Vercel, disconnect the Git repository or disable deployments from the Vercel project settings; do not remove repository history or secrets from Git because no secrets should be committed.
+Rollback strategy: revert workflow and documentation changes through a Pull Request if CLI deployment must be removed. In GitHub, remove or rotate repository secrets if they are no longer needed. In Vercel, disable or delete the CLI-created project/deployments according to maintainer direction; do not commit or remove secrets through Git history because no secrets should be committed.
 
 ## Open Questions
 
-- What exact `NEXT_PUBLIC_API_URL` values should be configured in Vercel for Production and Preview?
-- Which GitHub/Vercel account or team will own the Vercel project and perform the external connection?
-- Does the backend already allow requests from Vercel production and preview domains, or will a separate backend issue be needed?
+- Which Vercel account/team owns the project that will receive CLI deployments?
+- Will the owner create `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, or does the assignee have permission to create them with `gh secret set` after approval?
+- Should `NEXT_PUBLIC_API_URL` be sourced from Vercel environment configuration via `vercel pull`, or from GitHub Secrets/Variables passed into the build?
+- Does the Vercel project already have an initial production deployment, avoiding the first-deployment Preview caveat for PR deployments without `--prod`?
+- Does the backend already allow requests from the final Vercel Preview and Production domains, or will a separate backend issue be needed?
