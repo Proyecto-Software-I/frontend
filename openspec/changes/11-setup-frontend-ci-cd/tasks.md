@@ -45,6 +45,7 @@
 - [x] 4.6 Run `npm run check`.
 - [ ] 4.7 Verify from the Pull Request for this issue that the GitHub Actions workflow runs automatically for a PR targeting `main`.
 - [ ] 4.8 Verify the workflow shows separate successful steps for `npm ci`, OpenSpec validation, lint, and build.
+  - First real GitHub Actions run failed at `npm run spec:validate` with `openspec: not found` because the clean runner did not have the OpenSpec CLI installed globally. The workflow now installs `@fission-ai/openspec@1.9.0` before OpenSpec validation; CI success still requires a new real PR run.
 - [ ] 4.9 Perform a controlled failure check showing CI fails when a required validation fails, then revert or correct the intentional failure before finalizing so no broken code remains in the final history.
 - [ ] 4.10 Verify the workflow is scoped as intended for Pull Requests targeting `main`.
 - [ ] 4.11 Verify the GitHub repository is connected to Vercel when the required external permissions are available.
