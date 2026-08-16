@@ -242,7 +242,9 @@ Given the Landing Page is implemented
 When the page is inspected
 Then the page remains a Server Component by default
 And any Client Component is limited to a justified interactive subsection if needed
-And no dependency is added for visual effects
+And no unrelated external dependency is added
+And no dependency or component is installed only for visual effects or convenience
+And additional official shadcn/ui components are installed only when they are necessary, provide clear value to the Landing, preserve design-system coherence, and are justified by a concrete implementation need
 And no heavy assets are introduced solely for decoration
 
 #### Scenario: Final validation succeeds

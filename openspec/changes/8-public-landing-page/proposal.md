@@ -33,6 +33,7 @@ The page must explain the problem LegacyLift addresses, how the product approach
 - Use Server Components by default.
 - Avoid converting the whole Landing Page into a Client Component.
 - Reuse existing shadcn/ui components first: `Button`, `Card`, `Badge`; use `Separator` only if it adds real value and does not introduce unnecessary Client Component usage.
+- Install additional official shadcn/ui components only if they provide clear value to the Landing, are truly necessary, preserve the existing design system, follow project conventions, and are justified by a concrete implementation need.
 - Reuse the existing `lucide-react` dependency only if icons materially improve readability.
 - Use semantic design tokens and existing visual conventions.
 - Implement internal navigation with anchors to sections on the same page.
@@ -43,7 +44,7 @@ The page must explain the problem LegacyLift addresses, how the product approach
 - Creating `/auth/login` or `/auth/register` routes.
 - Implementing authentication behavior, forms, sessions, or authorization.
 - Implementing dashboard, projects, analysis flows, backend API calls, billing, checkout, subscriptions, administration, AI functionality, or functional Migration Packs.
-- Adding, removing, or updating dependencies.
+- Adding unrelated external dependencies or unnecessary dependencies.
 - Changing backend contracts or adding frontend API routes.
 - Changing global design tokens, `globals.css`, shared UI primitives, or global layout.
 - Inventing prices, certifications, compliance guarantees, support terms, concrete Migration Pack availability, or unavailable product pages.
@@ -95,4 +96,4 @@ No loading, empty, or error state is needed for the Landing content because this
 - LegacyLift is an approved product name for this issue because the issue explicitly defines it.
 - The `/auth/login` and `/auth/register` links are expected to be present even though the target routes are not implemented in this issue.
 - Footer links to unavailable pages should be omitted or rendered only as non-navigational labels; no new routes should be invented.
-- No dependency is required to implement the Landing.
+- No unrelated external dependency is required to implement the Landing. Additional official shadcn/ui components may be installed only when justified by a concrete Landing implementation need and when existing components are insufficient.

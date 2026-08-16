@@ -74,6 +74,8 @@ The existing shadcn primitives should provide the visual base:
 - `Badge` for compact labels, stage names, plan labels, or future-capability disclaimers.
 - `Separator` only if justified despite its Client Component boundary.
 
+Additional official shadcn/ui components may be installed only if the implementation has a concrete need that existing components do not satisfy. Any added shadcn/ui component must provide clear value to the Landing, preserve coherence with the existing design system, and follow the project's current conventions. Do not add unrelated external UI libraries or dependencies.
+
 `lucide-react` is already installed and may be used sparingly for visual scanning if icons improve clarity. It should not be required for the page to make sense.
 
 ## Content Model
@@ -191,15 +193,17 @@ Plans must avoid:
 - Subscription mechanics.
 - Checkout or payment CTAs.
 
-## Dependencies
+## Dependencies And shadcn/ui Additions
 
-No new dependencies are planned.
+No unrelated external dependencies are planned.
 
 Existing dependencies that may be used:
 
 - `next/link` for navigation.
 - `lucide-react` for optional icons.
 - Existing shadcn/ui primitives.
+
+Official shadcn/ui components may be added during implementation only when they are necessary for the approved Landing design and when the need is documented. Do not install a package or component only for visual effects or convenience if the same result can be achieved clearly with existing project capabilities.
 
 ## Validation Plan
 

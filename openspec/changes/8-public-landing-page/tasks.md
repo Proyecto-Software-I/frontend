@@ -63,7 +63,9 @@
 - [ ] Reuse existing `Card` for grouped product, problem, capability, plan, or security content where appropriate.
 - [ ] Reuse existing `Badge` for labels and compact status/context markers where appropriate.
 - [ ] Use `Separator` only if it clearly improves the layout and the Client Component tradeoff is acceptable.
+- [ ] Add official shadcn/ui components only if existing components are insufficient and the added component has a concrete, documented need for the Landing.
 - [ ] Use `lucide-react` only if icons improve comprehension; do not add icon or animation dependencies.
+- [ ] Do not add unrelated external dependencies or install anything only for visual effects or convenience.
 - [ ] Use semantic tokens and existing Tailwind/shadcn conventions.
 - [ ] Avoid direct Tailwind color palettes, hex values, inline visual styles, arbitrary radii, custom shadows, and global token changes.
 
