@@ -68,5 +68,5 @@ No migration, feature flag, dependency, package, lockfile, backend, or persisted
 
 - [ ] Backend#5 contract must confirm whether `SESSION_EXPIRED` is emitted anywhere; local code currently emits `UNAUTHORIZED` or `SESSION_REVOKED` for the relevant 401 paths. This design maps all safely without changing the backend.
 - [ ] Confirm development browser behavior for the `legacylift_refresh` HttpOnly cookie (`SameSite=Lax`, path `/api/auth`) across the configured frontend/backend origins.
-- [ ] GitHub issue #7 could not be fetched because `gh` is unavailable and no local issue artifact exists; proposal/spec/exploration are the available scope evidence.
+- [ ] Verify the proposal/spec match the acceptance criteria in frontend issue #7 (routes, redirects, token handling, and error-code mapping).
 - [ ] If backend changes response fields, status codes, or error semantics, pause implementation and update this OpenSpec change first.
