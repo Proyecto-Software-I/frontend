@@ -29,7 +29,7 @@ logout -> POST /logout (Bearer, credentials) -> clear memory -> /auth/login
 
 | File | Action | Description |
 |---|---|---|
-| `src/lib/api/api-client.ts`, `api-error.ts` | Modify | Add opt-in credentials and Bearer options; preserve empty `204`; expose validated error code data. |
+| `src/lib/api/api-client.ts`, `src/lib/api/api-error.ts` | Modify | Add opt-in credentials and Authorization header support; preserve empty `204`; expose validated error code data. |
 | `src/features/auth/types/*`, `api/*` | Create | Backend DTO/response types, guards, endpoint adapters, and safe error-code mapping. |
 | `src/features/auth/provider.tsx`, `components/*`, `hooks/*` | Create | In-memory state machine, bounded bootstrap, gates, forms, selector, dashboard composition, and accessible feedback. |
 | `src/app/(session)/layout.tsx`, `auth/*`, `dashboard/page.tsx` | Create | Route-group provider boundary and the four route compositions. |
