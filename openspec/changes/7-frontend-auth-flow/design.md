@@ -50,7 +50,7 @@ type AuthSession = {
 type AuthState = { status: AuthStatus; session: AuthSession | null };
 ```
 
-Adapters use the unchanged backend paths: `/api/auth/register`, `/login`, `/refresh`, `/me`, `/select-organization`, `/logout`. Register/login DTOs match backend validation; selection sends only a listed membership’s `organization.id`. Map `EMAIL_ALREADY_REGISTERED`, `INVALID_CREDENTIALS`, `USER_NOT_ACTIVE`, `NO_ACTIVE_MEMBERSHIP`, `ORGANIZATION_ACCESS_DENIED`, `UNAUTHORIZED`, `SESSION_REVOKED`, and `SESSION_EXPIRED` to safe copy; unknown/network/validation failures stay generic and never expose raw bodies.
+Adapters use the unchanged backend paths: `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`, `/api/auth/me`, `/api/auth/select-organization`, `/api/auth/logout`. Register/login DTOs match backend validation; selection sends only a listed membership’s `organization.id`. Map `EMAIL_ALREADY_REGISTERED`, `INVALID_CREDENTIALS`, `USER_NOT_ACTIVE`, `NO_ACTIVE_MEMBERSHIP`, `ORGANIZATION_ACCESS_DENIED`, `UNAUTHORIZED`, `SESSION_REVOKED`, and `SESSION_EXPIRED` to safe copy; unknown/network/validation failures stay generic and never expose raw bodies.
 
 ## Testing Strategy
 
