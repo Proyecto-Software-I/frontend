@@ -32,7 +32,7 @@ logout -> POST /logout (Bearer, credentials) -> clear memory -> /auth/login
 | `src/lib/api/api-client.ts`, `src/lib/api/api-error.ts` | Modify | Add opt-in credentials and Authorization header support; preserve empty `204`; expose validated error code data. |
 | `src/features/auth/types/*`, `api/*` | Create | Backend DTO/response types, guards, endpoint adapters, and safe error-code mapping. |
 | `src/features/auth/provider.tsx`, `components/*`, `hooks/*` | Create | In-memory state machine, bounded bootstrap, gates, forms, selector, dashboard composition, and accessible feedback. |
-| `src/app/(session)/layout.tsx`, `auth/*`, `dashboard/page.tsx` | Create | Route-group provider boundary and the four route compositions. |
+| `src/app/(session)/layout.tsx`, `src/app/auth/*`, `src/app/dashboard/page.tsx` | Create | Route-group provider boundary and the four route compositions. |
 | `src/app/page.tsx`, `src/app/health/page.tsx` | Preserve | Existing landing links become valid; health behavior and API call remain intact. |
 
 Use existing `Button`, `Card`, `Badge`, and `Separator` primitives. Feature classes use semantic tokens (`background`, `foreground`, `card`, `muted`, `destructive`, `ring`) and responsive constrained layouts; no new dependency or global token change is required.
