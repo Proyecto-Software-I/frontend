@@ -41,7 +41,7 @@ Use a feature-owned provider/hook with API adapters under `src/features/auth`, e
 
 ## Dependencies and Ambiguity
 
-Consume the exact contract from [Proyecto-Software-I/backend#5](https://github.com/Proyecto-Software-I/backend/issues/5): `/register`, `/login`, `/refresh`, `/me`, `/select-organization`, and `/logout`. The local backend emits `UNAUTHORIZED`/`SESSION_REVOKED` rather than the issue's `SESSION_EXPIRED`; map observed codes safely and coordinate any required contract change before implementation. Do not infer authorization from client organization IDs.
+Consume the exact contract from [Proyecto-Software-I/backend#5](https://github.com/Proyecto-Software-I/backend/issues/5): `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`, `/api/auth/me`, `/api/auth/select-organization`, and `/api/auth/logout`. The local backend emits `UNAUTHORIZED`/`SESSION_REVOKED` rather than the issue's `SESSION_EXPIRED`; map observed codes safely and coordinate any required contract change before implementation. Do not infer authorization from client organization IDs.
 
 ## Risks and Rollback
 
