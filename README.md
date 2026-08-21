@@ -164,9 +164,7 @@ npm run build
 npm run check
 ```
 
-## CI/CD
-
-### CI
+## CI
 
 Los Pull Requests dirigidos a `main` ejecutan GitHub Actions:
 
@@ -179,37 +177,11 @@ PR -> main
      -> npm run build
 ```
 
-Cada validación se ejecuta como un paso separado para identificar con claridad qué parte falla. El workflow falla si falla cualquiera de estos comandos.
+Cada validacion se ejecuta como un paso separado para identificar con claridad que parte falla. El workflow falla si falla cualquiera de estos comandos.
 
-Actualmente no existe una suite automatizada de pruebas configurada, por lo que el CI no ejecuta `npm test`.
+Actualmente no existe una suite automatizada de pruebas configurada, por lo que el CI no ejecuta `npm test`. Cuando se incorpore una suite aplicable, el workflow debera actualizarse en la issue correspondiente.
 
-### CD
-
-El despliegue se gestiona mediante la integración Git nativa de Vercel:
-
-```text
-PR / branch -> Vercel Preview Deployment
-main        -> Vercel Production Deployment
-```
-
-En Vercel, `main` debe configurarse como Production Branch. Las ramas de desarrollo deben generar previews y no deben sustituir producción.
-
-Esta issue no modifica rulesets ni protecciones de `main`, no configura dominio personalizado y no despliega el backend.
-
-### Variables de entorno en despliegue
-
-Preview y Production deben configurar `NEXT_PUBLIC_API_URL` mediante Vercel Environment Variables.
-
-`NEXT_PUBLIC_API_URL` es pública para el navegador porque usa el prefijo `NEXT_PUBLIC_`; no debe contener secretos, tokens, contraseñas, API keys privadas ni credenciales.
-
-No subas archivos `.env` al repositorio. `.env.example` solo debe cambiar si aparece una variable nueva que realmente necesite documentación.
-
-### Permisos y backend
-
-Conectar Vercel requiere permisos sobre el repositorio de GitHub y acceso al proyecto o team de Vercel para configurar la Production Branch y las Environment Variables.
-
-El backend puede necesitar permitir requests desde el dominio Production de Vercel y los dominios Preview. CORS del backend está fuera del alcance de este repositorio y debe coordinarse en la issue correspondiente si bloquea pruebas reales.
-
+El despliegue automatico (CD) **no esta configurado actualmente**. La estrategia de hosting, previews y despliegue a produccion se definira en una issue y un cambio OpenSpec futuros cuando el proyecto lo necesite.
 ## Contribución
 
 Las reglas de ramas, commits, issues, Pull Requests y revisiones se encuentran en:
