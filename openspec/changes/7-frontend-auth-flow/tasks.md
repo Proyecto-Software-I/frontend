@@ -11,9 +11,8 @@
 | Delivery strategy | ask-always |
 | Suggested split | Single PR, explicit maintainer review; no chain |
 
-Decision needed before apply: Yes
+Decision needed before apply: Yes (confirm error-code mapping + cookie topology)
 Chained PRs recommended: No
-Chain strategy: size-exception
 400-line budget risk: High
 
 ### Work Units and Dependencies
