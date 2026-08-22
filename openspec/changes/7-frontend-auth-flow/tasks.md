@@ -1,51 +1,36 @@
-# Tasks: Multi-Tenant Frontend Authentication Flow
+# Tasks: Frontend Authentication Flow
 
-## Review Workload Forecast
+All tasks remain unchecked until implementation and verification after `PLAN APPROVED`.
 
-| Field | Value |
-|-------|-------|
-| Estimated changed lines | 650-800 |
-| Review budget | 800 changed lines |
-| 400-line budget risk | High |
-| Chained PRs recommended | No; chain not applicable |
-| Delivery strategy | ask-always |
-| Suggested split | Single PR, explicit maintainer review; no chain |
+## 1. Contract and API Boundary
 
-Decision needed before apply: Yes (confirm error-code mapping + cookie topology)
-Chained PRs recommended: No
-400-line budget risk: High
+- [ ] 1.1 Define strict DTO, user, organization, membership, full-session, auth-only refresh, and error-envelope types. Model nested `memberships[].organization` and flat `activeMembership` exactly.
+- [ ] 1.2 Extend the existing API client with opt-in `credentials: include`, Bearer authorization, timeout/network handling, validated error codes, and empty `204` support without changing health behavior.
+- [ ] 1.3 Add adapters for register, login, refresh, `/me`, select-organization, and logout. Assert exact paths, methods, bodies, statuses, response semantics, cookie use, and memory-only access tokens.
+- [ ] 1.4 Add contract tests for `credentials: include` on register/login/refresh/logout, full-session register/login, `Set-Cookie`, auth-only refresh with no refresh token JSON, `/me` without auth in the body, selection with a new access token, and `204` logout.
 
-### Work Units and Dependencies
+## 2. Session State and Protection
 
-| Unit | Deliverable | Dependency |
-|------|-------------|------------|
-| 1 | API contracts and shared request boundary | None |
-| 2 | In-memory provider and bootstrap gates | Unit 1 |
-| 3 | Route presentations and navigation | Unit 2 |
-| 4 | Verification and OpenSpec closeout | Units 1-3 |
+- [ ] 2.1 Create one provider/hook with private in-memory token and `bootstrapping`, `anonymous`, `authenticated`, and `selection-required` states.
+- [ ] 2.2 Implement one bounded bootstrap: refresh with cookie credentials, then `/me` with Bearer; distinguish first visit from expired/revoked only through observable HTTP signals and never map all failures to `SESSION_EXPIRED`.
+- [ ] 2.3 Add route gates for dashboard and selector, authenticated-user redirects from login/register, pending-selection redirects, loading boundaries, and no-loop behavior.
+- [ ] 2.4 Add state tests for registration, one/multiple/zero active memberships, bootstrap success/first visit/expired/revoked failure, selection replacement, and logout success/error.
 
-## Phase 1: Contracts and API Boundary
+## 3. Routes and Accessible UI
 
-- [ ] 1.1 Define strict auth DTOs, session/membership models, response guards, and backend error-envelope/code mapping under `src/features/auth/types` and `src/features/auth/api`, using backend #5 paths and fields without contract changes.
-- [ ] 1.2 Extend `src/lib/api/api-client.ts` and `src/lib/api/api-error.ts` with opt-in `credentials`, Bearer authorization, typed error data, timeout/network handling, and empty-body `204` support; preserve `/api/health` behavior.
-- [ ] 1.3 Add adapters for register, login, refresh, `/me`, select-organization, and logout under `src/features/auth/api`; validate external responses and keep access tokens memory-only.
+- [ ] 3.1 Build login and register using existing UI primitives with required validation, loading, disabled, success, duplicate-email, invalid-credentials, inactive-user, and generic error states.
+- [ ] 3.2 Build organization selection from validated memberships only, showing nested organization names and roles; retain `ORGANIZATION_ACCESS_DENIED` and generic failures for retry.
+- [ ] 3.3 Build the dashboard placeholder with only user, active organization, roles, logout, and `/health`; handle logout `204`, pending, and failure states.
+- [ ] 3.4 Verify labels, associated errors, semantic controls, keyboard operation, visible focus, status announcements, and mobile/tablet/desktop layouts without horizontal scrolling.
 
-## Phase 2: Auth State and Protection
+## 4. Verification and Closeout
 
-- [ ] 2.1 Create one `AuthProvider` and auth hook under `src/features/auth` owning token, session, `bootstrapping`, `anonymous`, `authenticated`, and `selection-required` states.
-- [ ] 2.2 Implement one bounded bootstrap in `src/features/auth/provider.tsx`: `POST /refresh` with cookie credentials, then authenticated `GET /me`; clear memory and redirect once on failure without recursive refresh.
-- [ ] 2.3 Add session route-group layout/gates under `src/app/(session)` to protect dashboard and selector, redirect pending selection, and redirect authenticated users from login/register while showing bootstrap loading.
+- [ ] 4.1 Execute manual contract cases for every endpoint: register `201` + `Set-Cookie`, login `200` + `Set-Cookie`, `/me` Bearer, selection Bearer/new token, refresh cookie/auth-only, logout `204`, cookie attributes, and response shapes.
+- [ ] 4.2 Execute manual behavior cases for first visit, valid reload, expired/revoked session, zero/one/multiple memberships, redirects, retryable selection errors, validation, unknown/network/timeout errors, no token in storage/URL, `/`, and `/health`.
+- [ ] 4.3 Resolve or record the local browser-cookie prerequisite: backend default port `3001` versus frontend README/env and backend `FRONTEND_URL` references to `3000`/`3001`; do not change the contract or backend in this issue.
+- [ ] 4.4 Run strict OpenSpec validation, existing applicable tests, `npm run lint`, and `npm run build`; fix only approved-scope failures.
+- [ ] 4.5 After implementation, synchronize artifacts, confirm every task is verified before checking it, and archive only when the plan is complete.
 
-## Phase 3: Routes and UI
+## Scope Guard
 
-- [ ] 3.1 Build `/auth/login` and `/auth/register` using feature components and existing UI primitives; cover validation, loading, error, success, disabled submit, and single-organization/dashboard transitions.
-- [ ] 3.2 Build `/auth/select-organization` from validated `memberships[]` names/roles only; submit listed IDs, retain selection errors, and allow retry.
-- [ ] 3.3 Build `/dashboard` placeholder with user, active organization, roles, logout, and `/health`; handle logout loading/error/success and preserve `/` and `/health` regression behavior.
-- [ ] 3.4 Verify semantic labels, associated errors, keyboard/focus behavior, safe messages, and responsive mobile/tablet/desktop layouts without horizontal scrolling; add no dependencies.
-
-## Phase 4: Verification and Closeout
-
-- [ ] 4.1 Add focused existing-tool tests for guards, error mapping, adapter headers/credentials, malformed responses, provider transitions, bounded bootstrap, multi-membership selection, and `204` logout.
-- [ ] 4.2 Run issue manual scenarios: register, single/multi-tenant login, invalid credentials, failed selection/retry, reload/refresh failure, route protection, logout, keyboard/responsive states, no token in storage/URL, and `/health`.
-- [ ] 4.3 Run `npm run check`, strict OpenSpec validation, lint, and build; fix only approved-scope failures.
-- [ ] 4.4 Sync OpenSpec after implementation, confirm all tasks complete and specs match behavior, then archive `7-frontend-auth-flow` with `openspec archive`.
+No backend changes, source changes before approval, package/dependency changes, dashboard expansion, organization switching, persistence, dashboard features, other out-of-scope auth features, or apply-progress artifacts.

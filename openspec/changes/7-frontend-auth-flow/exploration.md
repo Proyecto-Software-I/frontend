@@ -17,6 +17,7 @@ The local sibling backend implements the contract from `Proyecto-Software-I/back
 - `POST /api/auth/refresh` reads the HttpOnly `legacylift_refresh` cookie and returns only `auth.accessToken`, `tokenType`, and `expiresIn`; it does not require Bearer authentication.
 - `POST /api/auth/logout` requires Bearer authentication, clears the refresh cookie, and returns HTTP 204.
 - Successful auth responses contain `user`, `auth`, `activeOrganization`, `activeMembership`, `memberships`, and `requiresOrganizationSelection`. Membership entries contain a nested `organization` object and `roles`.
+- The backend auth specification defines `SESSION_EXPIRED` for an expired session and `SESSION_REVOKED` for a revoked session. Generic authentication failures may be observed as `UNAUTHORIZED`; these cases remain distinguishable from the specific session codes at the frontend error boundary.
 
 The backend enables CORS with credentials and uses the refresh cookie at path `/api/auth`, so browser requests to refresh and other cookie-dependent auth calls must include credentials. The access token must remain in memory only, per frontend issue #7 and the repository security rules.
 
@@ -90,22 +91,18 @@ The frontend issue's `/dashboard` route is the authoritative target for this cha
 - `POST /api/auth/logout` may return an empty 204 body; the shared client must not require JSON for that response.
 - The current backend `selectOrganization` response does not set a new refresh cookie because the existing session cookie remains valid; the frontend should use the returned access token and not assume a refresh-token JSON field.
 
-### Ambiguities And Blockers
+### Resolved Planning Notes And Remaining Constraints
 
-- **Error-code coverage needs confirmation before proposal approval.** Frontend issue #7 lists `SESSION_EXPIRED`, but the local backend's generic 401 filter maps to `UNAUTHORIZED`, while auth service paths explicitly use `INVALID_CREDENTIALS`, `USER_NOT_ACTIVE`, `NO_ACTIVE_MEMBERSHIP`, `ORGANIZATION_ACCESS_DENIED`, and `SESSION_REVOKED`. The plan must map observed backend codes safely without inventing a frontend-only contract; backend coordination is required if `SESSION_EXPIRED` is expected.
-- **Route protection strategy is not established.** The repository has no middleware, provider, or auth boundary pattern. The proposal/design must decide whether protection is client-side redirect logic, a layout/provider boundary, or another Next.js-supported mechanism after consulting the installed local Next.js documentation. No route middleware should be invented during exploration.
-- **Refresh bootstrap timing is not specified.** The flow must avoid redirect flicker and refresh loops, but the repository does not define an initial loading boundary or redirect ownership. This needs an explicit design decision.
-- **Cookie development topology must be verified.** The README uses frontend `localhost:3001` and backend `localhost:3000`; the backend allows credentials and `SameSite=Lax`, but the implementation should verify that the browser sends the `/api/auth`-scoped cookie for the configured cross-origin requests.
-- **Backend issue wording and local code differ on response examples.** The issue examples show `displayName` values and memberships consistently enough for typing, but the local registration implementation constructs display name from first and last name. The frontend must display backend values rather than derive identity fields.
+- **Error handling is contract-driven.** `SESSION_EXPIRED` is a defined backend code. The frontend maps it, `SESSION_REVOKED`, `UNAUTHORIZED`, and other known or generic failures safely according to the current proposal/spec/design, without changing or inventing backend behavior.
+- **Cookie/CORS topology remains a testing prerequisite.** The documented frontend/backend `localhost` port and origin mismatch (`3000`/`3001`) must be aligned or explicitly recorded before browser verification of the HttpOnly `/api/auth` cookie. This is a verification blocker, not an unresolved product question or contract change.
+- **Response values remain backend-owned.** The frontend must render returned identity and membership values, including `displayName`, rather than derive or normalize fields beyond the documented request/response contract.
 
-### Product And Technical Questions
+### Implementation Constraints
 
-- Product: should an authenticated user who manually opens `/auth/login` or `/auth/register` be redirected to `/dashboard`, or should those forms remain visible?
-- Product: what user-safe copy should represent `UNAUTHORIZED`, `SESSION_REVOKED`, and the listed `SESSION_EXPIRED` case if the backend does not currently emit the latter?
-- Technical: which component owns initial auth restoration and the loading screen so protected routes do not render before session resolution?
-- Technical: should an expired Bearer response trigger one bounded refresh-and-retry, or should this initial flow only restore on application bootstrap? The issue requires avoiding infinite refresh cycles but does not define retry behavior.
-- Technical: should a failed `/me` after a successful refresh clear the in-memory token immediately and route to login, or preserve a selection-pending state when refresh indicates a null organization?
-- Technical: should `/auth/select-organization` reject direct access when the in-memory session does not have `requiresOrganizationSelection`, and which behavior is expected after a hard reload on that route before bootstrap completes?
+- Use the approved feature-owned provider/session layout and one bounded `POST /refresh` followed by `GET /me`; do not add recursive refresh or a second auth client.
+- Keep access tokens in memory only and use validated `memberships[]` data for organization selection.
+- Treat first-visit versus expired/revoked bootstrap outcomes as distinct only when the HTTP response makes that distinction observable; never infer `SESSION_EXPIRED` from an opaque failure.
+- Preserve the approved redirects and loading boundary for dashboard, selector, login, and registration routes.
 
 ### Scope And Non-goals
 
@@ -116,7 +113,7 @@ Out of scope: changing the backend contract or backend implementation; creating 
 ### Risks
 
 - A contract mismatch in error codes or response shapes can produce incorrect user messaging or navigation; use the local backend implementation and tests as the baseline and stop for any required contract change.
-- Client-side auth restoration can cause redirect loops or a flash of protected content if bootstrap ownership is not explicit.
+- Client-side auth restoration can cause redirect loops or a flash of protected content if the approved provider and loading boundary are implemented inconsistently.
 - Incorrect `credentials` or cookie-path handling will make refresh appear logged out after reload even when the backend session is valid.
 - Treating `organizationId` as authorization rather than backend-selected context would violate the multi-tenant boundary.
 - Making the full layout or all pages client components would increase coupling and contradict the existing Server Component default.
@@ -124,11 +121,11 @@ Out of scope: changing the backend contract or backend implementation; creating 
 
 ### Ready for Proposal
 
-No, not unconditionally. The repository and local backend provide enough information to draft a proposal, but the error-code mismatch and route-protection/bootstrap decisions are material blockers that must be made explicit in the proposal/design and coordinated with backend where they affect the contract. In interactive mode, the next phase (`sdd-propose`) requires explicit user approval before it starts; exploration does not authorize proposal creation or implementation.
+Yes. The backend contract and the current proposal/spec/design/tasks resolve the former error-code, route-protection, bootstrap, and redirect questions. The only remaining blocker is the documented local cookie/CORS topology prerequisite for browser verification; it does not block planning or require a contract change. In interactive mode, the next phase (`sdd-propose`) still requires explicit user approval before it starts, and exploration does not authorize implementation.
 
-**Status**: partial
-**Executive Summary**: Explored frontend issue #7 against the real frontend and sibling backend repositories. The recommended direction is a feature-owned, in-memory auth state over the existing API client, but error-code and route-bootstrap decisions remain explicit blockers.
+**Status**: planning-ready
+**Executive Summary**: Explored frontend issue #7, which was successfully read from GitHub earlier, against the real frontend and sibling backend repositories. The recommended direction is a feature-owned, in-memory auth state over the existing API client; known and generic backend errors are mapped safely without changing the backend contract.
 **Artifacts**: `openspec/changes/7-frontend-auth-flow/exploration.md`
-**Next Recommended**: `sdd-propose` after the user approves the next phase and the listed contract/bootstrap decisions are resolved or accepted as proposal risks.
-**Risks**: Backend/frontend error-code mismatch (`SESSION_EXPIRED` versus observed `UNAUTHORIZED`/`SESSION_REVOKED`), undefined route-protection/bootstrap ownership, and cross-origin refresh-cookie behavior.
-**Skill Resolution**: fallback-path — loaded `sdd-explore` and `cognitive-doc-design`; read shared `sdd-phase-common.md` and `openspec-convention.md`.
+**Next Recommended**: Implementation may proceed only after the existing planning approval gate; resolve or record the local cookie/CORS topology before browser-cookie verification.
+**Risks**: Cross-origin refresh-cookie behavior remains dependent on the documented `3000`/`3001` topology prerequisite; unrecognized or non-observable failures must remain generic.
+**Skill Resolution**: exact-path — loaded `C:\Users\brahi\.config\opencode\skills\sdd-explore\SKILL.md`, `C:\Users\brahi\.config\opencode\skills\_shared\SKILL.md`, and `C:\Users\brahi\.config\opencode\skills\cognitive-doc-design\SKILL.md`.
