@@ -2,7 +2,7 @@
 
 La issue `Proyecto-Software-I/frontend#14` transforma `/dashboard` en la primera ruta del workspace autenticado. El frontend ya utiliza App Router, módulos por feature, un cliente API común en `src/lib/api` y primitivas de shadcn/ui en `src/components/ui`. La motivación y el alcance funcional están definidos en `proposal.md`; los contratos de comportamiento están en `specs/authenticated-workspace-shell/spec.md`.
 
-La implementación debe integrarse con la feature Auth canónica cuando esté disponible. Este cambio no implementa Auth, no crea un segundo provider de sesión o tenant y no modifica el backend.
+La implementación se integrará con la feature Auth canónica ya disponible en la PR 13 (`feat/7-frontend-auth-flow`). Este cambio no implementa Auth, no crea un segundo provider de sesión o tenant y no modifica el backend.
 
 ## Goals / Non-Goals
 
@@ -27,13 +27,13 @@ La implementación debe integrarse con la feature Auth canónica cuando esté di
 
 ### Layout autenticado de App Router
 
-El workspace se organizará mediante un layout de route group o una estructura equivalente que respete el patrón ya establecido por Auth. La protección se ubicará en la composición del workspace, no en cada página individual, para que futuras rutas hereden las mismas reglas.
+El workspace se organizará mediante un layout de route group anidado dentro del grupo `(session)` ya existente, de modo que herede `AuthProvider` y `SessionBoundary`. La protección se ubicará en la composición del workspace, no en cada página individual, para que futuras rutas hereden las mismas reglas.
 
 **Alternativas consideradas:** proteger únicamente `/dashboard` reduciría el alcance inicial, pero obligaría a repetir la protección al agregar cada ruta. Un middleware global protegería rutas que no pertenecen al workspace y mezclaría responsabilidades de navegación con la resolución del contexto Auth.
 
 ### Reutilización del contexto Auth
 
-La sesión, el usuario, `activeOrganization`, `requiresOrganizationSelection`, roles, adapters y operación de logout serán consumidos desde la abstracción canónica de Auth. El workspace no mantendrá un estado paralelo de tenant ni reimplementará `me`, refresh o logout.
+La sesión, el usuario, `activeOrganization`, `requiresOrganizationSelection`, roles, adapters y operación de logout serán consumidos desde `useAuth`, `AuthProvider`, `SessionBoundary` y `auth-api.ts` de `src/features/auth`. El workspace no mantendrá un estado paralelo de tenant ni reimplementará `me`, refresh o logout.
 
 **Alternativas consideradas:** crear `WorkspaceAuthProvider` o `TenantProvider` aislaría el dashboard, pero produciría dos fuentes de verdad y permitiría datos obsoletos al cambiar de organización. Leer el tenant desde URL o storage contradice el límite de tenant definido por Auth.
 
@@ -45,15 +45,13 @@ El layout, la página y los componentes puramente visuales permanecerán como Se
 
 ### Acceso HTTP fuera de componentes visuales
 
-Cuando la integración requiera obtener o restaurar la sesión, se utilizarán los adapters de Auth y `src/lib/api/api-client.ts`. Los componentes visuales recibirán datos y callbacks tipados, sin construir URLs ni interpretar respuestas HTTP directamente.
+Cuando la integración requiera obtener o restaurar la sesión, se utilizarán los adapters existentes de `src/features/auth/api/auth-api.ts` y `src/lib/api/api-client.ts`. Los componentes visuales recibirán datos y callbacks tipados, sin construir URLs ni interpretar respuestas HTTP directamente.
 
 **Alternativas consideradas:** llamar `/api/auth/me` desde la página o desde cada componente duplicaría el acceso y podría generar estados inconsistentes. Crear otro cliente API no aporta capacidad y rompería la convención existente.
 
 ### UI y Material Symbols
 
-La interfaz utilizará primero `Button`, `Card`, `Badge`, `Separator` y demás primitivas disponibles en `src/components/ui`, junto con tokens semánticos existentes. Google Material Symbols se configurará mediante la alternativa aprobada por el repositorio y se documentará en `AGENTS.md`; no se agregará una dependencia de npm para iconos sin aprobación explícita.
-
-**Alternativas consideradas:** reutilizar `lucide-react` resolvería iconos puntuales porque ya existe en el proyecto, pero la issue solicita específicamente Google Material Symbols. Agregar otra biblioteca de iconos aumentaría dependencias y no es necesario para cumplir el requerimiento.
+La interfaz utilizará primero `Button`, `Card`, `Badge`, `Separator` y demás primitivas disponibles en `src/components/ui`, junto con tokens semánticos existentes. Los iconos del App Shell serán Google Material Symbols, cargados mediante la hoja de estilos de Google Fonts en el límite global de estilos y usados con la familia `Material Symbols Outlined`. No se utilizará `lucide-react` para los nuevos iconos ni se agregará una dependencia npm de iconos. La configuración y la convención de uso se documentarán en `AGENTS.md`.
 
 ### Estados de navegación
 
@@ -63,7 +61,7 @@ El estado de carga se renderizará antes de mostrar datos privados. Las decision
 
 ## Risks / Trade-offs
 
-- **[Auth canónico no presente en el checkout actual]** → Confirmar los puntos de integración existentes antes de implementar y detenerse si fuera necesario crear Auth; nunca duplicar providers ni inventar contratos.
+- **[La base Auth de la PR 13 cambia antes de integrarse]** → Mantener el workspace sobre los contratos y exports existentes de `src/features/auth`; detenerse y actualizar el plan si la PR 13 modifica esos límites.
 - **[Redirecciones ejecutadas desde el lado incorrecto]** → Mantener la resolución del acceso en el límite apropiado de App Router y aislar la interactividad de navegador en Client Components mínimos.
 - **[Datos privados obsoletos durante bootstrap]** → No renderizar el contenido autenticado mientras Auth indique carga y no leer tenant desde storage o URL.
 - **[Material Symbols introduce una integración externa]** → No incorporar paquetes nuevos; documentar la configuración elegida y revisar su impacto de carga, fallback y accesibilidad.

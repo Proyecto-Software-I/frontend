@@ -1,8 +1,8 @@
 ## 1. Preparación e integración con Auth
 
-- [ ] 1.1 Revisar la feature Auth canónica disponible en la rama base e identificar sus providers, hooks, adapters, tipos y operación de logout sin crear abstracciones equivalentes.
+- [ ] 1.1 Integrar la implementación Auth de la PR 13 (`feat/7-frontend-auth-flow`) e identificar `AuthProvider`, `useAuth`, `SessionBoundary`, adapters, tipos canónicos y operación de logout sin crear abstracciones equivalentes.
 - [ ] 1.2 Confirmar el contrato consumido para restaurar la sesión mediante `GET /api/auth/me`, incluyendo usuario, `activeOrganization`, `requiresOrganizationSelection` y roles.
-- [ ] 1.3 Confirmar la estructura App Router vigente y seleccionar el layout del workspace sin modificar rutas de Auth ni crear endpoints del frontend.
+- [ ] 1.3 Confirmar la estructura App Router vigente y ubicar el layout del workspace dentro del patrón `(session)` existente, sin modificar rutas de Auth ni crear endpoints del frontend.
 
 ## 2. Protección del workspace
 
@@ -18,8 +18,9 @@
 - [ ] 3.2 Implementar el logout mediante la operación Auth existente y verificar la redirección a `/auth/login`.
 - [ ] 3.3 Actualizar `/dashboard` para mostrar LegacyLift, saludo al usuario, organización activa y roles del contexto actual, sin habilitar funcionalidades fuera de alcance.
 - [ ] 3.4 Mantener Server Components por defecto y aislar en Client Components únicamente los eventos o hooks que requiera Auth o logout.
-- [ ] 3.5 Configurar Google Material Symbols sin agregar una biblioteca npm no aprobada y documentar su uso junto con la política de tipos canónicos y `src/features/*/types` en `AGENTS.md`.
-- [ ] 3.6 Verificar la interfaz en mobile y desktop usando tokens semánticos, sin navegación funcional no solicitada ni estilos arbitrarios.
+- [ ] 3.5 Configurar y utilizar Google Material Symbols mediante la hoja de estilos de Google Fonts, sin agregar una biblioteca npm de iconos no aprobada.
+- [ ] 3.6 Documentar en `AGENTS.md` el uso de Google Material Symbols, la política de tipos canónicos y la responsabilidad de `src/features/*/types`.
+- [ ] 3.7 Verificar la interfaz en mobile y desktop usando tokens semánticos, sin navegación funcional no solicitada ni estilos arbitrarios.
 
 ## 4. Pruebas y accesibilidad
 
