@@ -158,10 +158,30 @@ Respuesta esperada:
 ## Verificación
 
 ```bash
+npm run spec:validate
 npm run lint
 npm run build
+npm run check
 ```
 
+## CI
+
+Los Pull Requests dirigidos a `main` ejecutan GitHub Actions:
+
+```text
+PR -> main
+  -> GitHub Actions
+     -> npm ci
+     -> npm run spec:validate
+     -> npm run lint
+     -> npm run build
+```
+
+Cada validacion se ejecuta como un paso separado para identificar con claridad que parte falla. El workflow falla si falla cualquiera de estos comandos.
+
+Actualmente no existe una suite automatizada de pruebas configurada, por lo que el CI no ejecuta `npm test`. Cuando se incorpore una suite aplicable, el workflow debera actualizarse en la issue correspondiente.
+
+El despliegue automatico (CD) **no esta configurado actualmente**. La estrategia de hosting, previews y despliegue a produccion se definira en una issue y un cambio OpenSpec futuros cuando el proyecto lo necesite.
 ## Contribución
 
 Las reglas de ramas, commits, issues, Pull Requests y revisiones se encuentran en:
