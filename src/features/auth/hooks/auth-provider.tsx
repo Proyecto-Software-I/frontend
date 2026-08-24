@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 import { ApiError } from "@/lib/api/api-error";
 
@@ -22,7 +23,12 @@ import {
   type RegisterInput,
 } from "../api/auth-api";
 import { getAuthErrorMessage } from "../auth-error";
-import type { AuthStatus, FullSession, SessionContext } from "../types/auth";
+import {
+  isSessionContext,
+  type AuthStatus,
+  type FullSession,
+  type SessionContext,
+} from "../types/auth";
 
 interface AuthState {
   status: AuthStatus;
@@ -39,6 +45,7 @@ interface AuthContextValue extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const protectedPaths = new Set(["/dashboard", "/auth/select-organization"]);
 
 function sessionStatus(session: SessionContext): AuthStatus {
   return session.requiresOrganizationSelection
@@ -57,6 +64,8 @@ function contextFromFullSession(fullSession: FullSession): SessionContext {
 }
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const pathname = usePathname();
+  const initialPathnameRef = useRef(pathname);
   const accessTokenRef = useRef<string | null>(null);
   const [state, setState] = useState<AuthState>({
     status: "bootstrapping",
@@ -71,6 +80,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       try {
         const refreshed = await refresh();
         const session = await getMe(refreshed.auth.accessToken);
+
+        if (!isSessionContext(session)) {
+          throw new Error("El backend devolvió una respuesta de autenticación inesperada.");
+        }
 
         if (cancelled) {
           return;
@@ -92,6 +105,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           status: "anonymous",
           session: null,
           notice:
+            protectedPaths.has(initialPathnameRef.current) &&
             error instanceof ApiError &&
             (error.code === "SESSION_EXPIRED" ||
               error.code === "SESSION_REVOKED")

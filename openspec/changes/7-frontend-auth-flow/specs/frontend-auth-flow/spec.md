@@ -17,6 +17,8 @@ The application MUST use the following methods, paths, credentials, statuses, re
 
 The refresh cookie MUST be named `legacylift_refresh`, `HttpOnly`, `SameSite=Lax`, `Secure` only in production, and `Path=/api/auth`. Requests needing it MUST use `credentials: include`.
 
+The current backend has a contract discrepancy: refresh without a `legacylift_refresh` cookie returns `SESSION_REVOKED` instead of the anonymous `UNAUTHORIZED` distinction. On `/auth/login` and `/auth/register`, the frontend treats a failed initial refresh as anonymous without showing a session notice; on protected routes, it preserves returned `SESSION_EXPIRED` or `SESSION_REVOKED` feedback. This is a route-aware frontend mitigation and remains a backend discrepancy for contract-level coordination; it is not changed by this frontend update.
+
 #### Scenario: Registration establishes one organization
 
 - **GIVEN** valid registration data
@@ -35,7 +37,7 @@ The refresh cookie MUST be named `legacylift_refresh`, `HttpOnly`, `SameSite=Lax
 
 ### Requirement: Session shape and organization selection are contract-driven
 
-Each `memberships[]` item MUST contain a nested `organization` and `roles`. `activeMembership` MUST contain only its membership fields and `roles`; it MUST NOT contain a nested organization. The selector MUST render only validated `memberships[]` options, including nested organization name and roles, and MUST NOT accept arbitrary organization IDs or authorize from client data.
+Each `memberships[]` item MUST contain a nested `organization` and `roles`. `activeMembership` MUST contain only its membership fields and `roles`; it MUST NOT contain a nested organization. The selector MUST render only validated `ACTIVE` `memberships[]` options, including nested organization name and roles, and MUST NOT accept arbitrary organization IDs or authorize from client data. Runtime validation MUST reject duplicate membership or organization identifiers and incoherent active organization/membership pairs.
 
 #### Scenario: Valid selection returns the new session
 
@@ -71,11 +73,25 @@ Bootstrap MUST perform one bounded `POST /api/auth/refresh` followed by authenti
 - **WHEN** the bounded attempt ends
 - **THEN** memory auth is cleared, login is shown with safe session feedback, and the response is handled as `SESSION_EXPIRED` or `SESSION_REVOKED` as returned; `SESSION_REVOKED` is allowed for an expired refresh in the current backend
 
+#### Scenario: Public initial refresh stays anonymous
+
+- **GIVEN** `/auth/login` or `/auth/register` is the current route and no observable authenticated session exists
+- **WHEN** the initial refresh fails with `SESSION_EXPIRED` or `SESSION_REVOKED`
+- **THEN** the frontend clears in-memory auth, remains anonymous, and does not show a session notice
+
+#### Scenario: Protected initial refresh preserves session feedback
+
+- **GIVEN** `/dashboard` or `/auth/select-organization` is the current route
+- **WHEN** the initial refresh fails with `SESSION_EXPIRED` or `SESSION_REVOKED`
+- **THEN** the frontend clears in-memory auth, remains anonymous, and preserves the safe session notice for the route gate/login flow
+
 ### Requirement: Protected navigation and UI states
 
 The application MUST protect `/dashboard` and `/auth/select-organization`, redirect pending-selection sessions to the selector, redirect authenticated users from login/register to `/dashboard`, and preserve `/` and `/health`. Forms and selector MUST expose idle, loading, validation, success, empty, network, and safe error states; disable repeated submission while pending; and work on mobile, tablet, and desktop without horizontal scrolling. Labels, associated errors, semantic controls, keyboard operation, visible focus, and accessible status announcements are required.
 
 The dashboard placeholder MUST show only user, active organization, roles, logout, and `/health`.
+
+The implemented auth UI MUST retain associated field errors and status announcements, semantic radio controls for organization selection, visible selected and pending states, disabled repeated submission, semantic design tokens, visible focus treatment, and sufficient contrast for auth actions and dashboard content. The maintainer manually verified desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
 
 #### Scenario: Protected routes and accessible pending states
 
@@ -111,6 +127,6 @@ Browser-cookie contract testing MUST record the configured frontend origin, back
 
 #### Scenario: Contract verification matrix
 
-- **GIVEN** a configured browser test environment
+- **GIVEN** the configured Vitest suite with mocked fetch boundaries
 - **WHEN** the listed endpoint cases are executed
-- **THEN** tests verify status, request credentials, Bearer requirements, full versus auth-only response shape, `Set-Cookie`/cookie clearing, nested membership organization, and absence of refresh token in JSON
+- **THEN** automated tests verify status, request credentials, Bearer requirements, full versus auth-only response shape, observed `Set-Cookie` headers, nested membership organization, and absence of refresh token in JSON; the current evidence also records 13 passing Vitest tests, strict OpenSpec validation, lint, TypeScript, build, git diff check, lockfile dry-run, and the maintainer's manual verification note above

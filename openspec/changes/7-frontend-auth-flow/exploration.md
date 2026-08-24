@@ -2,11 +2,11 @@
 
 ### Current State
 
-The frontend is a small Next.js 16.2.12 App Router application using strict TypeScript, feature folders, shared shadcn/ui primitives, and `NEXT_PUBLIC_API_URL`. The current routes are `/`, `/health`, and the root layout; `/auth/login`, `/auth/register`, `/auth/select-organization`, and `/dashboard` do not exist. The existing landing page already links to the two auth entry routes.
+The frontend is a small Next.js 16.2.12 App Router application using strict TypeScript, feature folders, shared shadcn/ui primitives, and `NEXT_PUBLIC_API_URL`. The implemented routes are `/`, `/health`, `/auth/login`, `/auth/register`, `/auth/select-organization`, and `/dashboard`; auth routes are composed under the `(session)` layout with an `AuthProvider` and `SessionBoundary`.
 
-`src/lib/api/api-client.ts` provides the only HTTP client and currently supplies `Accept: application/json`, timeout cancellation, and generic JSON/text parsing. It does not currently add `credentials: "include"` or an `Authorization` header. `ApiError` preserves HTTP status and the untyped response body, which is sufficient to inspect the backend error envelope but does not yet provide typed error-code handling.
+`src/lib/api/api-client.ts` remains the only HTTP client and now supplies opt-in `credentials: "include"`, Bearer authorization, timeout/network handling, validated error codes, generic JSON/text parsing, and empty-`204` support. `ApiError` preserves the backend error envelope and auth code for safe feature-level mapping.
 
-The existing health feature demonstrates the repository pattern: endpoint access under `src/features/health/api`, client-side state under `src/features/health/hooks`, runtime response validation, and user-safe error messages. No authentication state, route guard, browser storage token persistence, auth feature module, or protected route exists yet.
+The existing health feature demonstrates the repository pattern. Authentication now has runtime-validated types/adapters, a feature-owned provider, protected route boundary, form/selector/dashboard components, and no browser-storage token persistence.
 
 The local sibling backend implements the contract from `Proyecto-Software-I/backend#5`:
 
@@ -93,8 +93,8 @@ The frontend issue's `/dashboard` route is the authoritative target for this cha
 
 ### Resolved Planning Notes And Remaining Constraints
 
-- **Error handling is contract-driven.** `SESSION_EXPIRED` is a defined backend code. The frontend maps it, `SESSION_REVOKED`, `UNAUTHORIZED`, and other known or generic failures safely according to the current proposal/spec/design, without changing or inventing backend behavior.
-- **Cookie/CORS topology remains a testing prerequisite.** The documented frontend/backend `localhost` port and origin mismatch (`3000`/`3001`) must be aligned or explicitly recorded before browser verification of the HttpOnly `/api/auth` cookie. This is a verification blocker, not an unresolved product question or contract change.
+- **Error handling is contract-driven.** `SESSION_EXPIRED` is a defined backend code. The frontend maps it, `SESSION_REVOKED`, `UNAUTHORIZED`, and other known or generic failures safely according to the current proposal/spec/design, without changing or inventing backend behavior. Initial-refresh session notices are suppressed on public login/register routes and preserved on protected routes.
+- **Cookie/CORS topology remains recorded.** The documented frontend/backend `localhost` port and origin mismatch (`3000`/`3001`) is explicitly recorded; maintainer cookie/CORS verification passed against the configured environment. This is not a product question or contract change.
 - **Response values remain backend-owned.** The frontend must render returned identity and membership values, including `displayName`, rather than derive or normalize fields beyond the documented request/response contract.
 
 ### Implementation Constraints
@@ -108,7 +108,7 @@ The frontend issue's `/dashboard` route is the authoritative target for this cha
 
 In scope: the four routes named by frontend issue #7; registration, login, bounded session restoration, exceptional organization selection, dashboard placeholder, logout, shared API-client auth support, centralized in-memory auth state, contract error mapping, responsive/accessibility states, and preserving `/health`.
 
-Out of scope: changing the backend contract or backend implementation; creating a second HTTP client or frontend BFF; persistent access-token storage; the real dashboard/app shell; organization switching after entry; last-organization persistence; projects, legacy systems, settings, invitations, password recovery, email verification, OAuth, MFA, billing, role administration, and new testing infrastructure.
+Out of scope: changing the backend contract or backend implementation; creating a second HTTP client or frontend BFF; persistent access-token storage; the real dashboard/app shell; organization switching after entry; last-organization persistence; projects, legacy systems, settings, invitations, password recovery, email verification, OAuth, MFA, billing, and role administration. The maintainer subsequently approved bounded Vitest infrastructure for the contract/state tasks only.
 
 ### Risks
 
@@ -121,11 +121,24 @@ Out of scope: changing the backend contract or backend implementation; creating 
 
 ### Ready for Proposal
 
-Yes. The backend contract and the current proposal/spec/design/tasks resolve the former error-code, route-protection, bootstrap, and redirect questions. The only remaining blocker is the documented local cookie/CORS topology prerequisite for browser verification; it does not block planning or require a contract change. In interactive mode, the next phase (`sdd-propose`) still requires explicit user approval before it starts, and exploration does not authorize implementation.
+Yes. The backend contract and the current proposal/spec/design/tasks resolve the former error-code, route-protection, bootstrap, and redirect questions. The no-cookie refresh discrepancy remains a backend blocker documented for coordination; it does not require a frontend contract change. In interactive mode, the next phase (`sdd-propose`) still requires explicit user approval before it starts, and exploration does not authorize implementation.
 
 **Status**: planning-ready
 **Executive Summary**: Explored frontend issue #7, which was successfully read from GitHub earlier, against the real frontend and sibling backend repositories. The recommended direction is a feature-owned, in-memory auth state over the existing API client; known and generic backend errors are mapped safely without changing the backend contract.
 **Artifacts**: `openspec/changes/7-frontend-auth-flow/exploration.md`
-**Next Recommended**: Implementation may proceed only after the existing planning approval gate; resolve or record the local cookie/CORS topology before browser-cookie verification.
+**Next Recommended**: Complete final artifact synchronization, then archive only when the plan is complete; no archive is performed in this task.
 **Risks**: Cross-origin refresh-cookie behavior remains dependent on the documented `3000`/`3001` topology prerequisite; unrecognized or non-observable failures must remain generic.
 **Skill Resolution**: exact-path — loaded `C:\Users\brahi\.config\opencode\skills\sdd-explore\SKILL.md`, `C:\Users\brahi\.config\opencode\skills\_shared\SKILL.md`, and `C:\Users\brahi\.config\opencode\skills\cognitive-doc-design\SKILL.md`.
+
+### Implementation Reconciliation
+
+- Session restoration is exactly one refresh followed by `/me`; the access token is held in a private ref and is cleared on failed bootstrap and logout.
+- `ACTIVE` memberships are the only memberships counted for tenant decisions and selector options. Runtime guards require unique membership and organization IDs, reject inactive active-membership data, and require coherent organization/role references. Multiple active memberships produce `selection-required`; one active membership produces `authenticated`; zero active memberships is rejected as `NO_ACTIVE_MEMBERSHIP`.
+- Error mapping includes `SESSION_EXPIRED`, `SESSION_REVOKED`, and `UNAUTHORIZED` in addition to validation, credential, membership, organization-access, generic, network, and timeout feedback.
+- Auth visual remediation is present: field errors and `aria-describedby` associations, semantic invalid styling, selected organization state and native radio controls, disabled/dimmed pending options, active auth links, contrasting semantic secondary submit buttons, and improved dashboard/link contrast with visible focus treatment.
+- Automated evidence: 13 Vitest tests pass, strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run pass. The Vitest suite is limited to mocked frontend HTTP and provider boundaries; manual verification supplies the browser and cookie/CORS evidence.
+- Maintainer manual verification is complete for desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
+
+### Backend Blocker
+
+The current backend returns `SESSION_REVOKED` for refresh without a `legacylift_refresh` cookie, where the frontend contract expects an anonymous `UNAUTHORIZED` distinction. The provider now suppresses that initial-refresh notice on `/auth/login` and `/auth/register` while retaining it on protected routes. This is a route-aware frontend mitigation; the backend contract issue remains to be coordinated separately.
