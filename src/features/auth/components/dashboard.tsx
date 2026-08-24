@@ -36,10 +36,16 @@ export function Dashboard() {
       <div className="mx-auto grid w-full max-w-4xl gap-6">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-primary">LegacyLift</p>
+            <p className="text-sm font-semibold text-background">LegacyLift</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">Dashboard</h1>
           </div>
-          <Button type="button" variant="outline" onClick={() => void handleLogout()} disabled={pending}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void handleLogout()}
+            disabled={pending}
+            className="border-background/20 bg-transparent text-background hover:bg-background/10 hover:text-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:text-background/70"
+          >
             {pending ? "Cerrando sesión..." : "Cerrar sesión"}
           </Button>
         </header>
@@ -73,7 +79,10 @@ export function Dashboard() {
         <Card className="border-background/10 bg-background/5 text-background ring-background/10">
           <CardHeader><CardTitle>Diagnóstico</CardTitle></CardHeader>
           <CardContent>
-            <Link className="text-sm font-medium text-primary underline-offset-4 hover:underline" href="/health">
+            <Link
+              className="text-sm font-medium text-background underline-offset-4 hover:text-background hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              href="/health"
+            >
               Ver estado del backend
             </Link>
           </CardContent>

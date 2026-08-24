@@ -14,17 +14,27 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
   const [pending, setPending] = useState(false);
   const displayedError = error ?? notice;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!email.trim() || !password) {
+    const validationErrors = {
+      email: email.trim() ? undefined : "Ingresá tu email.",
+      password: password ? undefined : "Ingresá tu contraseña.",
+    };
+    if (validationErrors.email || validationErrors.password) {
+      setFieldErrors(validationErrors);
       setError("Ingresá tu email y contraseña.");
       return;
     }
 
     setPending(true);
+    setFieldErrors({});
     setError(null);
     clearNotice();
     try {
@@ -52,8 +62,12 @@ export function LoginForm() {
           label="Email"
           type="email"
           value={email}
-          onChange={setEmail}
+          onChange={(value) => {
+            setEmail(value);
+            setFieldErrors((current) => ({ ...current, email: undefined }));
+          }}
           autoComplete="email"
+          error={fieldErrors.email}
           describedBy={displayedError ? "login-form-error" : undefined}
         />
         <Field
@@ -61,16 +75,20 @@ export function LoginForm() {
           label="Contraseña"
           type="password"
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            setPassword(value);
+            setFieldErrors((current) => ({ ...current, password: undefined }));
+          }}
           autoComplete="current-password"
+          error={fieldErrors.password}
           describedBy={displayedError ? "login-form-error" : undefined}
         />
-        <Button type="submit" disabled={pending} className="w-full">
+        <Button type="submit" variant="secondary" disabled={pending} aria-busy={pending} className="w-full disabled:opacity-70">
           {pending ? "Ingresando..." : "Ingresar"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           ¿Todavía no tenés una cuenta?{" "}
-          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/auth/register">
+          <Link className="font-medium text-background underline-offset-4 hover:text-background hover:underline active:opacity-80 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/auth/register">
             Registrate
           </Link>
         </p>

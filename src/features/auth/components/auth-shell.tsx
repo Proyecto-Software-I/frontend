@@ -18,12 +18,12 @@ export function AuthShell({
         <CardHeader className="gap-3">
           <Link
             href="/"
-            className="w-fit text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="w-fit text-sm font-semibold text-background underline-offset-4 hover:text-background hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             LegacyLift
           </Link>
           <CardTitle className="text-2xl">{title}</CardTitle>
-          <p className="text-sm leading-6 text-background/68">{description}</p>
+          <p className="text-sm leading-6 text-background/80">{description}</p>
         </CardHeader>
         <CardContent>{children}</CardContent>
       </Card>
@@ -65,8 +65,8 @@ export function Field({
         onChange={(event) => onChange(event.target.value)}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
-         aria-describedby={[describedBy, error ? errorId : undefined].filter(Boolean).join(" ") || undefined}
-         className="h-10 w-full rounded-lg border border-background/15 bg-foreground/5 px-3 text-sm text-background outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        aria-describedby={[describedBy, error ? errorId : undefined].filter(Boolean).join(" ") || undefined}
+        className="h-10 w-full rounded-lg border border-background/30 bg-background/10 px-3 text-sm text-background placeholder:text-background/70 outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
       />
       {error ? (
         <p id={errorId} className="text-sm text-destructive" role="alert">

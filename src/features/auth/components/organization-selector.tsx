@@ -40,11 +40,11 @@ export function OrganizationSelector() {
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-foreground p-4 font-mono text-background sm:p-6">
-      <Card className="w-full max-w-2xl border-background/10 bg-background/5 text-background ring-background/10">
+      <Card className="w-full max-w-2xl border-background/20 bg-background/10 text-background ring-background/20">
         <CardHeader>
-          <p className="text-sm font-semibold text-primary">LegacyLift</p>
+          <p className="text-sm font-semibold text-background">LegacyLift</p>
           <CardTitle className="text-2xl">Elegí una organización</CardTitle>
-            <p className="text-sm leading-6 text-background/68">
+          <p className="text-sm leading-6 text-background/80">
             Tu usuario pertenece a más de una organización. Seleccioná una para continuar.
           </p>
         </CardHeader>
@@ -56,7 +56,7 @@ export function OrganizationSelector() {
               </p>
             ) : null}
             {memberships.length === 0 ? (
-                <p className="rounded-lg border border-background/10 p-4 text-sm text-background/68" role="status">
+              <p className="rounded-lg border border-background/20 p-4 text-sm text-background/80" role="status">
                 No hay organizaciones activas disponibles.
               </p>
             ) : (
@@ -65,7 +65,14 @@ export function OrganizationSelector() {
                 {memberships.map((membership) => (
                   <label
                     key={membership.id}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition hover:bg-muted has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50"
+                    className={`flex items-start gap-3 rounded-lg border p-4 text-background transition has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50 ${
+                      pending
+                        ? "pointer-events-none border-background/20 opacity-60"
+                        : selectedId === membership.organization.id
+                          ? "cursor-pointer border-background bg-background/15 ring-1 ring-background/30"
+                          : "cursor-pointer border-background/30 hover:bg-background/10"
+                    }`}
+                    data-selected={selectedId === membership.organization.id}
                   >
                     <input
                       type="radio"
@@ -73,10 +80,13 @@ export function OrganizationSelector() {
                       value={membership.organization.id}
                       checked={selectedId === membership.organization.id}
                       onChange={() => setSelectedId(membership.organization.id)}
-                      className="mt-1 size-4 accent-primary"
+                      className="mt-1 size-4 accent-background"
                     />
                     <span className="grid gap-2">
                       <span className="font-medium">{membership.organization.name}</span>
+                      {selectedId === membership.organization.id ? (
+                        <span className="text-sm text-background/80">Seleccionada</span>
+                      ) : null}
                       <span className="flex flex-wrap gap-2">
                         {membership.roles.map((role) => (
                           <Badge key={role} variant="secondary">{role}</Badge>
@@ -87,7 +97,7 @@ export function OrganizationSelector() {
                 ))}
               </fieldset>
             )}
-              <Button type="submit" disabled={selectedId === null || memberships.length === 0 || pending}>
+            <Button type="submit" variant="secondary" disabled={selectedId === null || memberships.length === 0 || pending} aria-busy={pending} className="w-full disabled:opacity-70">
               {pending ? "Seleccionando..." : "Continuar"}
             </Button>
           </form>

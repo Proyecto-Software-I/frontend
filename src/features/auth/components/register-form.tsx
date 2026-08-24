@@ -19,25 +19,36 @@ export function RegisterForm() {
     organizationName: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof typeof values, string>>
+  >({});
   const [pending, setPending] = useState(false);
   const displayedError = error ?? notice;
 
   function update(field: keyof typeof values, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (Object.values(values).some((value) => !value.trim())) {
-      setError("Completá todos los campos.");
-      return;
+    const validationErrors: Partial<Record<keyof typeof values, string>> = {};
+    for (const [field, value] of Object.entries(values) as [keyof typeof values, string][]) {
+      if (!value.trim()) {
+        validationErrors[field] = "Completá este campo.";
+      }
     }
-    if (values.password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+    if (validationErrors.password === undefined && values.password.length < 8) {
+      validationErrors.password = "Usá al menos 8 caracteres.";
+    }
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      setError("Completá todos los campos.");
       return;
     }
 
     setPending(true);
+    setFieldErrors({});
     setError(null);
     clearNotice();
     try {
@@ -61,18 +72,18 @@ export function RegisterForm() {
           </p>
         ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="firstName" label="Nombre" value={values.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" describedBy={displayedError ? "register-form-error" : undefined} />
-          <Field id="lastName" label="Apellido" value={values.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" describedBy={displayedError ? "register-form-error" : undefined} />
+          <Field id="firstName" label="Nombre" value={values.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" error={fieldErrors.firstName} describedBy={displayedError ? "register-form-error" : undefined} />
+          <Field id="lastName" label="Apellido" value={values.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" error={fieldErrors.lastName} describedBy={displayedError ? "register-form-error" : undefined} />
         </div>
-        <Field id="email" label="Email" type="email" value={values.email} onChange={(value) => update("email", value)} autoComplete="email" describedBy={displayedError ? "register-form-error" : undefined} />
-        <Field id="password" label="Contraseña" type="password" value={values.password} onChange={(value) => update("password", value)} autoComplete="new-password" describedBy={displayedError ? "register-form-error" : undefined} />
-        <Field id="organizationName" label="Nombre de la organización" value={values.organizationName} onChange={(value) => update("organizationName", value)} autoComplete="organization" describedBy={displayedError ? "register-form-error" : undefined} />
-        <Button type="submit" disabled={pending} className="mt-1 w-full">
+        <Field id="email" label="Email" type="email" value={values.email} onChange={(value) => update("email", value)} autoComplete="email" error={fieldErrors.email} describedBy={displayedError ? "register-form-error" : undefined} />
+        <Field id="password" label="Contraseña" type="password" value={values.password} onChange={(value) => update("password", value)} autoComplete="new-password" error={fieldErrors.password} describedBy={displayedError ? "register-form-error" : undefined} />
+        <Field id="organizationName" label="Nombre de la organización" value={values.organizationName} onChange={(value) => update("organizationName", value)} autoComplete="organization" error={fieldErrors.organizationName} describedBy={displayedError ? "register-form-error" : undefined} />
+        <Button type="submit" variant="secondary" disabled={pending} aria-busy={pending} className="mt-1 w-full disabled:opacity-70">
           {pending ? "Creando cuenta..." : "Crear cuenta"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           ¿Ya tenés una cuenta?{" "}
-          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/auth/login">
+          <Link className="font-medium text-background underline-offset-4 hover:text-background hover:underline active:opacity-80 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" href="/auth/login">
             Iniciá sesión
           </Link>
         </p>
