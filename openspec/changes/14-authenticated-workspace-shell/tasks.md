@@ -9,7 +9,7 @@
 - [x] 2.1 Crear la composición del layout autenticado para que las futuras rutas del workspace hereden la protección común.
 - [x] 2.2 Implementar el estado de bootstrap que evita renderizar información privada mientras Auth restaura la sesión.
 - [x] 2.3 Implementar las redirecciones a `/auth/login` y `/auth/select-organization` según el estado autenticado y la organización activa.
-- [x] 2.4 Manejar errores de restauración con un estado seguro que no exponga detalles técnicos ni datos de otro tenant.
+- [x] 2.4 Manejar errores de restauración con un estado `error` seguro que no exponga detalles técnicos ni datos de otro tenant.
 - [x] 2.5 Verificar que el tenant mostrado provenga únicamente del contexto Auth y no de URL, `localStorage`, `sessionStorage` ni valores hardcodeados.
 
 ## 3. App Shell y dashboard

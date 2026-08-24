@@ -129,6 +129,16 @@ function contextFromFullSession(fullSession: FullSession): SessionContext {
   };
 }
 
+function isAnonymousBootstrapFailure(error: unknown): boolean {
+  if (!(error instanceof ApiError) || error.status !== 401) {
+    return false;
+  }
+
+  return ["SESSION_EXPIRED", "SESSION_REVOKED", "UNAUTHORIZED"].includes(
+    error.code ?? "",
+  );
+}
+
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const initialPathnameRef = useRef(pathname);

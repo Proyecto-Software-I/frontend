@@ -12,6 +12,7 @@ La ruta `/dashboard` debe dejar de ser una entrada temporal y convertirse en el 
 - Mantener `/dashboard` como primera ruta del workspace.
 - Proteger el workspace según los estados de restauración de sesión, autenticación y organización activa.
 - Redirigir usuarios no autenticados a `/auth/login` y usuarios autenticados sin organización activa a `/auth/select-organization`.
+- Mostrar un estado de error seguro cuando la restauración no pueda clasificarse como una sesión anónima.
 - Mostrar en el dashboard el nombre del usuario, la organización activa y sus roles del contexto actual.
 - Reutilizar la única fuente de verdad de Auth, incluyendo `AuthProvider`, `useAuth`, `SessionBoundary`, adapters, cliente API y tipos canónicos ya implementados por la PR 13 en `feat/7-frontend-auth-flow`.
 - Mantener la organización activa proveniente de la sesión restaurada desde el backend; no usar URL, storage ni valores hardcodeados como fuente de verdad.

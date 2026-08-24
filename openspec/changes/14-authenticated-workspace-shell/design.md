@@ -55,7 +55,7 @@ La interfaz utilizará primero `Button`, `Card`, `Badge`, `Separator` y demás p
 
 ### Estados de navegación
 
-El estado de carga se renderizará antes de mostrar datos privados. Las decisiones de redirección se basarán exclusivamente en el estado de Auth: sesión ausente hacia login, sesión sin tenant hacia selección y sesión con tenant hacia el workspace. El logout reutilizará Auth y finalizará en `/auth/login`.
+El estado de carga se renderizará antes de mostrar datos privados. Las decisiones de redirección se basarán exclusivamente en el estado de Auth: sesión anónima hacia login, sesión sin tenant hacia selección y sesión con tenant hacia el workspace. Los fallos de bootstrap no clasificables se expondrán como un estado `error` seguro, sin datos privados y con un enlace al login. El logout reutilizará Auth y finalizará en `/auth/login`.
 
 **Alternativas consideradas:** permitir que la página decida sus propias redirecciones produciría protección incompleta para futuras rutas. Usar un estado local inicial podría mostrar durante un instante datos de otro tenant.
 
