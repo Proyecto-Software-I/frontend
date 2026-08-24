@@ -536,6 +536,17 @@ Prefiere tipos explícitos en:
 * Límites entre servidor y cliente.
 * Datos externos.
 
+## Reutilización de tipos
+
+Antes de declarar un `interface`, `type` o `enum`, busca si el mismo concepto ya está definido.
+
+* Reutiliza el tipo existente cuando represente la misma entidad, contrato o concepto.
+* No declares copias locales de tipos como `User`, `Organization`, `Membership` o respuestas API si ya existe una definición canónica.
+* Los tipos de una feature deben vivir junto a esa feature, preferentemente en `src/features/<feature>/types`.
+* Si solo necesitas una proyección de un tipo existente, deriva el nuevo tipo con `Pick`, `Omit` u otras utilidades cuando sea apropiado.
+* Crea un tipo nuevo únicamente cuando represente una semántica diferente.
+* Si un concepto realmente pasa a ser compartido por varias features, promueve una única definición canónica en lugar de mantener copias.
+
 # Comunicación con el backend
 
 La dirección base del backend se obtiene mediante:
@@ -668,6 +679,15 @@ Ejemplos:
 * Diálogos: `Dialog`, cuando esté incorporado.
 
 No recrees controles básicos con HTML y listas extensas de clases cuando ya exista un equivalente compartido.
+
+## Google Material Symbols
+
+Los iconos de la interfaz utilizan la familia variable `Material Symbols Outlined`, cargada desde Google Fonts mediante el `<head>` del layout raíz con `icon_names` y `display=block`, y configurada con la regla global de estilos y los ejes `FILL`, `wght`, `GRAD` y `opsz`.
+
+* Utiliza la clase `material-symbols-outlined` para los iconos del App Shell.
+* Marca como decorativos los iconos acompañados por texto con `aria-hidden="true"`.
+* Proporciona un nombre accesible mediante texto visible o una etiqueta cuando el icono sea interactivo.
+* No agregues una dependencia npm de iconos ni uses otra familia para reemplazar Material Symbols sin aprobación explícita.
 
 ## Tokens semánticos
 

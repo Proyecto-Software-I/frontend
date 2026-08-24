@@ -35,6 +35,6 @@ No se modifican capacidades existentes. La especificación vigente de `public-la
 - **Frontend**: composición bajo `src/app`, componentes de la feature workspace y reutilización de `src/features/auth`, `src/lib/api` y `src/components/ui` existentes en la base de la PR 13.
 - **Contratos**: consumo del contrato existente de Auth, especialmente la sesión restaurada mediante `GET /api/auth/me` y la operación existente de logout. No se definen endpoints nuevos ni cambios de contrato.
 - **Backend**: sin cambios esperados. La issue backend relacionada solo funciona como referencia del contrato de autenticación.
-- **Dependencias**: no se agregan dependencias de npm. Google Material Symbols debe resolverse respetando las dependencias y convenciones existentes o mediante una decisión explícita en el diseño aprobado.
+- **Dependencias**: no se agregan dependencias de npm. Google Material Symbols se carga mediante la hoja de estilos de Google Fonts definida en el diseño aprobado.
 - **Fuera de alcance técnico**: no se implementan Auth, un segundo provider de Auth/Tenant, selector de organizaciones, Projects, Legacy Systems, administración de miembros, RBAC UI, persistencia del dashboard, estadísticas reales ni sidebar funcional con páginas inexistentes.
-- **Riesgos**: la integración debe conservar la estructura `(session)` y el contexto Auth de la PR 13; cualquier cambio en sus contratos o providers queda fuera de esta issue y debe coordinarse antes de implementar.
+- **Riesgos**: la integración debe conservar la estructura `(session)` y el contexto Auth de la PR 13; cualquier cambio en sus contratos o providers queda fuera de esta issue y debe coordinarse antes de implementar. La navegación visible no habilitará páginas que todavía no existen.
