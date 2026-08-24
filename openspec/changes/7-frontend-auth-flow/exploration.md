@@ -126,7 +126,7 @@ Yes. The backend contract and the current proposal/spec/design/tasks resolve the
 **Status**: planning-ready
 **Executive Summary**: Explored frontend issue #7, which was successfully read from GitHub earlier, against the real frontend and sibling backend repositories. The recommended direction is a feature-owned, in-memory auth state over the existing API client; known and generic backend errors are mapped safely without changing the backend contract.
 **Artifacts**: `openspec/changes/7-frontend-auth-flow/exploration.md`
-**Next Recommended**: Manually re-test the exact remediated race, then archive only when the plan is complete; artifact synchronization is complete and no archive is performed in this task.
+**Next Recommended**: Run native final verification; archive only after a passing verify report. No verification or archive is performed in this task.
 **Risks**: Cross-origin refresh-cookie behavior remains dependent on the documented `3000`/`3001` topology prerequisite; unrecognized or non-observable failures must remain generic.
 **Skill Resolution**: exact-path — loaded `C:\Users\brahi\.config\opencode\skills\sdd-explore\SKILL.md`, `C:\Users\brahi\.config\opencode\skills\_shared\SKILL.md`, and `C:\Users\brahi\.config\opencode\skills\cognitive-doc-design\SKILL.md`.
 
@@ -136,8 +136,8 @@ Yes. The backend contract and the current proposal/spec/design/tasks resolve the
 - `ACTIVE` memberships are the only memberships counted for pre-selection decisions and selector options. Runtime guards require unique membership and organization IDs, reject inactive active-membership data, and require coherent organization/role references. Multiple ACTIVE memberships are valid after selection when one matches the selected context; zero active memberships is rejected as `NO_ACTIVE_MEMBERSHIP`.
 - Error mapping includes `SESSION_EXPIRED`, `SESSION_REVOKED`, and `UNAUTHORIZED` in addition to validation, credential, membership, organization-access, generic, network, and timeout feedback.
 - Auth visual remediation is present: field errors and `aria-describedby` associations, semantic invalid styling, selected organization state and native radio controls, disabled/dimmed pending options, active auth links, contrasting semantic secondary submit buttons, and improved dashboard/link contrast with visible focus treatment.
-- Automated evidence: 16 Vitest tests across three files pass without act warnings; strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run pass. The exact remediated browser race still requires manual re-test.
-- Earlier manual verification remains recorded, but it predates the confirmed multi-organization bootstrap race; that exact remediated flow requires a new manual re-test before archive.
+- Automated evidence: 16 Vitest tests across three files passed on clean commit `a8a2f4b` without act warnings; prior strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run passed.
+- Exact manual evidence: after a full frontend dev-server restart, an incognito login as the real multi-organization user and one `org321` selection loaded its dashboard; selection returned `200` with no follow-up `401` or `SESSION_REVOKED`.
 
 ### Backend Blocker
 

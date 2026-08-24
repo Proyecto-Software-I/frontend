@@ -135,4 +135,4 @@ Browser-cookie contract testing MUST record the configured frontend origin, back
 
 - **GIVEN** the configured Vitest suite with mocked adapter and fetch boundaries
 - **WHEN** the listed endpoint cases are executed
-- **THEN** automated tests verify status, request credentials, Bearer requirements, production full-session validation and provider adoption for selected `org321` with two ACTIVE memberships and empty roles, and bootstrap coordination without a stale `/me` request; the exact remediated browser re-test remains pending
+- **THEN** automated tests verify status, request credentials, Bearer requirements, production full-session validation and provider adoption for selected `org321` with two ACTIVE memberships and empty roles, and bootstrap coordination without a stale `/me` request; the exact restarted-server, incognito browser flow also passed without a follow-up `401` or `SESSION_REVOKED`

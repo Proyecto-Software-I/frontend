@@ -2,7 +2,7 @@
 
 ## Intent
 
-Implement and document the authenticated journey requested by [Proyecto-Software-I/frontend#7](https://github.com/Proyecto-Software-I/frontend/issues/7): registration, login, session restoration, exceptional organization selection, logout, and the minimal authenticated dashboard. Implementation and artifact synchronization are complete; the exact remediated race still needs manual re-testing before archive. The backend remains authoritative for sessions, memberships, organization selection, and tenant authorization.
+Implement and document the authenticated journey requested by [Proyecto-Software-I/frontend#7](https://github.com/Proyecto-Software-I/frontend/issues/7): registration, login, session restoration, exceptional organization selection, logout, and the minimal authenticated dashboard. Implementation, evidence, and artifact synchronization are complete and ready for final verification; archive follows only after a passing verify report. The backend remains authoritative for sessions, memberships, organization selection, and tenant authorization.
 
 ## Scope
 
@@ -41,4 +41,4 @@ The cookie is `legacylift_refresh; HttpOnly; SameSite=Lax; Secure` only in produ
 
 ## Success Criteria
 
-The focused suite includes deterministic Strict Mode duplicate-bootstrap, late-bootstrap-versus-selection, and selected-session regressions through both mocked adapters and the production API validation path. A selected session may retain multiple ACTIVE memberships while one matching membership is active. Prior manual verification remains valid, but the exact remediated multi-organization flow MUST be manually re-tested before archive; that final re-test has not yet occurred.
+The focused suite includes deterministic Strict Mode duplicate-bootstrap, late-bootstrap-versus-selection, and selected-session regressions through both mocked adapters and the production API validation path. A selected session may retain multiple ACTIVE memberships while one matching membership is active. After a full dev-server restart, an incognito login and one `org321` selection loaded its dashboard with a `200` selection response and no follow-up `401` or `SESSION_REVOKED`; final verification remains next.
