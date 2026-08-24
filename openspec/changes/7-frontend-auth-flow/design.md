@@ -6,7 +6,7 @@
 |---|---|---|
 | State | One feature-owned provider/hook owns the in-memory access token, session, bootstrap status, and actions | Prevents duplicated tenant truth and persistent token exposure |
 | Protection | Client gates in an App Router session layout; Server Components remain the default | Interactivity and navigation require client state; no middleware or BFF is justified |
-| Bootstrap | One `POST /refresh`, then `GET /me`; no recursive refresh/retry loop | Bounded restoration prevents loops and flicker |
+| Bootstrap coordination | Skip refresh when memory has a token; share one in-flight refresh across duplicate effects; generation-gate every auth operation | Prevents the duplicate effect/remount races covered by the state harness without persistent storage |
 | HTTP | Extend the existing API client with opt-in credentials, Bearer headers, typed error data, and empty `204` handling | Avoids a second client and preserves health behavior |
 | Validation | Runtime guards for session, membership, and error envelopes | Backend data is external and no new schema dependency is approved |
 | Capability header | Keep proposal `New Capabilities: frontend-auth-flow` and spec `## ADDED Requirements` | Strict validator accepts this new capability form |
@@ -22,12 +22,12 @@ refresh -> auth metadata only; never refresh token JSON
 logout -> POST /api/auth/logout (Bearer, credentials) -> 204 -> clear memory -> login
 ```
 
-The session model follows the backend exactly: `memberships[]` has nested `organization` and roles; `activeMembership` has membership fields and roles without nested organization. Registration always creates/selects one organization. One active membership auto-selects. Multiple active memberships set both active fields to `null` and require selection. Zero active memberships is `NO_ACTIVE_MEMBERSHIP`.
+The session model follows the backend exactly: `memberships[]` has nested `organization` and roles; `activeMembership` has membership fields and roles without nested organization. Registration always creates/selects one organization. One active membership auto-selects. Before selection, multiple active memberships set both active fields to `null`; after selection, the backend retains all memberships and identifies one matching active organization/membership. Zero active memberships is `NO_ACTIVE_MEMBERSHIP`.
 
 ## Components and Boundaries
 
 - API adapters under `src/features/auth/api` own HTTP calls, credentials, Bearer headers, response guards, and safe error mapping.
-- The provider owns the token privately and atomically replaces the validated full session after register, login, or selection.
+- The provider owns a module-memory token/session snapshot and monotonic generation. Login, registration, selection, and logout invalidate older work; token and session publish atomically, and stale bootstrap completion is ignored.
 - Route pages compose small Client Components only for state, effects, events, and navigation; visual components remain presentational.
 - Existing `Button`, `Card`, `Badge`, and `Separator` primitives and semantic tokens are reused. No dependency or global style change is planned.
 - `/`, `/health`, and unrelated backend files remain unchanged.
@@ -43,9 +43,10 @@ The documented port/origin mismatch remains recorded: backend default `3001`, fr
 ## Verification Strategy
 
 - Vitest contract tests mock every endpoint and assert method, path, body, expected status, credentials, Bearer requirements, response guards, nested membership organization, auth-only refresh response, observed `Set-Cookie` headers, and `204` empty logout. Frontend JavaScript does not claim visibility into HttpOnly cookie attributes.
-- Vitest state tests mount the real provider with mocked adapters and cover registration, one/multiple/zero membership outcomes, bootstrap success/first visit/expired failure, selection replacement, and logout success/error. The zero-ACTIVE case uses a structurally valid session-shaped fixture and asserts the provider's runtime guard rejects it. Each test resets mocks and unmounts roots in async-safe `beforeEach`/`afterEach` cleanup. The suite uses the approved `vitest.config.ts` jsdom setup and `npm test -- --run`.
+- Selected-session fixtures model ACTIVE `org123` and `org321` memberships, select `org321`, and allow its empty roles. Role comparison remains order-sensitive because no backend evidence requires set equivalence; changing that semantic is intentionally out of scope.
+- Vitest state tests mount the real provider with mocked adapters and prove Strict Mode duplicate effects share one bootstrap. They also settle organization selection before an older refresh and prove generation invalidation prevents the stale `/me` request. A focused integration test keeps production `auth-api.ts` real, mocks `fetch` plus `next/navigation`, and proves `requireResponse(..., isFullSession)` accepts the retained org123/org321 response before the provider atomically adopts its session and selected token. This harness covers duplicate effects/remounts, not a true module-reload Fast Refresh cycle; the exact remediated browser flow still requires a final manual re-test before archive.
 - Maintainer manual verification is complete for desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
-- Automated evidence: 13 Vitest tests pass, strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run pass. The automated suite covers mocked frontend HTTP and provider boundaries; manual verification supplies the browser and cookie/CORS evidence.
+- Automated evidence: 16 Vitest tests across three files pass without act warnings; strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run pass. Browser evidence for the newly remediated race remains pending.
 
 ## Rollout and Rollback
 

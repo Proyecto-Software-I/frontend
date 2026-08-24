@@ -9,6 +9,7 @@ import {
   selectOrganization,
 } from "@/features/auth/api/auth-api";
 import {
+  selectedSessionWithMultipleMemberships,
   sessionWithMemberships,
   sessionWithZeroActiveMemberships,
 } from "./auth-fixtures";
@@ -112,7 +113,7 @@ describe("authentication API contract", () => {
 
   it("uses Bearer auth for me and selection, including the selected organization body", async () => {
     const context = sessionWithMemberships(1);
-    const selected = sessionWithMemberships(1);
+    const selected = selectedSessionWithMultipleMemberships();
     const meResponse = response(200, { ...context, auth: undefined });
     const selectOrganizationResponse = response(200, selected);
     fetchMock
@@ -120,7 +121,7 @@ describe("authentication API contract", () => {
       .mockResolvedValueOnce(selectOrganizationResponse);
 
     await expect(getMe("me-token")).resolves.toMatchObject({ user: context.user });
-    await expect(selectOrganization("me-token", "organization-1")).resolves.toEqual(selected);
+    await expect(selectOrganization("me-token", "org321")).resolves.toEqual(selected);
     expect(meResponse.status).toBe(200);
     expect(selectOrganizationResponse.status).toBe(200);
 
@@ -136,7 +137,7 @@ describe("authentication API contract", () => {
       "http://localhost:3000/api/auth/select-organization",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ organizationId: "organization-1" }),
+        body: JSON.stringify({ organizationId: "org321" }),
         headers: expect.objectContaining({ Authorization: "Bearer me-token" }),
       }),
     );
@@ -146,10 +147,13 @@ describe("authentication API contract", () => {
     expect(fetchMock.mock.calls[1]?.[1]).toEqual(
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ organizationId: "organization-1" }),
+        body: JSON.stringify({ organizationId: "org321" }),
         headers: expect.objectContaining({ Authorization: "Bearer me-token" }),
       }),
     );
+    expect(selected.memberships).toHaveLength(2);
+    expect(selected.activeOrganization?.id).toBe("org321");
+    expect(selected.activeMembership?.roles).toEqual([]);
   });
 
   it("treats logout 204 as success with Bearer and credentials", async () => {

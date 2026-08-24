@@ -13,7 +13,7 @@ The local sibling backend implements the contract from `Proyecto-Software-I/back
 - `POST /api/auth/register` returns HTTP 201 and a full auth response with an active organization and `requiresOrganizationSelection: false`.
 - `POST /api/auth/login` returns HTTP 200. One active membership is selected automatically; two or more active memberships return `activeOrganization: null`, `activeMembership: null`, and `requiresOrganizationSelection: true`.
 - `GET /api/auth/me` requires `Authorization: Bearer <accessToken>` and returns session context without an access token.
-- `POST /api/auth/select-organization` requires Bearer authentication, accepts `{ organizationId }`, validates an active membership, and returns a full auth response with the selected tenant.
+- `POST /api/auth/select-organization` requires Bearer authentication, accepts `{ organizationId }`, validates an active membership, and returns a full auth response with the selected tenant while retaining all memberships.
 - `POST /api/auth/refresh` reads the HttpOnly `legacylift_refresh` cookie and returns only `auth.accessToken`, `tokenType`, and `expiresIn`; it does not require Bearer authentication.
 - `POST /api/auth/logout` requires Bearer authentication, clears the refresh cookie, and returns HTTP 204.
 - Successful auth responses contain `user`, `auth`, `activeOrganization`, `activeMembership`, `memberships`, and `requiresOrganizationSelection`. Membership entries contain a nested `organization` object and `roles`.
@@ -126,18 +126,18 @@ Yes. The backend contract and the current proposal/spec/design/tasks resolve the
 **Status**: planning-ready
 **Executive Summary**: Explored frontend issue #7, which was successfully read from GitHub earlier, against the real frontend and sibling backend repositories. The recommended direction is a feature-owned, in-memory auth state over the existing API client; known and generic backend errors are mapped safely without changing the backend contract.
 **Artifacts**: `openspec/changes/7-frontend-auth-flow/exploration.md`
-**Next Recommended**: Complete final artifact synchronization, then archive only when the plan is complete; no archive is performed in this task.
+**Next Recommended**: Manually re-test the exact remediated race, then archive only when the plan is complete; artifact synchronization is complete and no archive is performed in this task.
 **Risks**: Cross-origin refresh-cookie behavior remains dependent on the documented `3000`/`3001` topology prerequisite; unrecognized or non-observable failures must remain generic.
 **Skill Resolution**: exact-path — loaded `C:\Users\brahi\.config\opencode\skills\sdd-explore\SKILL.md`, `C:\Users\brahi\.config\opencode\skills\_shared\SKILL.md`, and `C:\Users\brahi\.config\opencode\skills\cognitive-doc-design\SKILL.md`.
 
 ### Implementation Reconciliation
 
-- Session restoration is exactly one refresh followed by `/me`; the access token is held in a private ref and is cleared on failed bootstrap and logout.
-- `ACTIVE` memberships are the only memberships counted for tenant decisions and selector options. Runtime guards require unique membership and organization IDs, reject inactive active-membership data, and require coherent organization/role references. Multiple active memberships produce `selection-required`; one active membership produces `authenticated`; zero active memberships is rejected as `NO_ACTIVE_MEMBERSHIP`.
+- Session restoration is one single-flight refresh followed by `/me`; a monotonic module-memory coordinator skips bootstrap when a token exists and rejects stale bootstrap or auth-operation completion.
+- `ACTIVE` memberships are the only memberships counted for pre-selection decisions and selector options. Runtime guards require unique membership and organization IDs, reject inactive active-membership data, and require coherent organization/role references. Multiple ACTIVE memberships are valid after selection when one matches the selected context; zero active memberships is rejected as `NO_ACTIVE_MEMBERSHIP`.
 - Error mapping includes `SESSION_EXPIRED`, `SESSION_REVOKED`, and `UNAUTHORIZED` in addition to validation, credential, membership, organization-access, generic, network, and timeout feedback.
 - Auth visual remediation is present: field errors and `aria-describedby` associations, semantic invalid styling, selected organization state and native radio controls, disabled/dimmed pending options, active auth links, contrasting semantic secondary submit buttons, and improved dashboard/link contrast with visible focus treatment.
-- Automated evidence: 13 Vitest tests pass, strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run pass. The Vitest suite is limited to mocked frontend HTTP and provider boundaries; manual verification supplies the browser and cookie/CORS evidence.
-- Maintainer manual verification is complete for desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
+- Automated evidence: 16 Vitest tests across three files pass without act warnings; strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run pass. The exact remediated browser race still requires manual re-test.
+- Earlier manual verification remains recorded, but it predates the confirmed multi-organization bootstrap race; that exact remediated flow requires a new manual re-test before archive.
 
 ### Backend Blocker
 

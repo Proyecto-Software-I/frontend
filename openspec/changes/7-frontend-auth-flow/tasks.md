@@ -1,6 +1,6 @@
 # Tasks: Frontend Authentication Flow
 
-Implementation, automated tests, and maintainer manual verification are checked below. Final artifact synchronization and archive remain unchecked.
+Implementation, automated tests, prior maintainer manual verification, and artifact synchronization are complete. The exact remediated selected-session re-test and archive remain unchecked.
 
 ## 1. Contract and API Boundary
 
@@ -12,9 +12,10 @@ Implementation, automated tests, and maintainer manual verification are checked 
 ## 2. Session State and Protection
 
 - [x] 2.1 Create one provider/hook with private in-memory token and `bootstrapping`, `anonymous`, `authenticated`, and `selection-required` states.
-- [x] 2.2 Implement one bounded bootstrap: refresh with cookie credentials, then `/me` with Bearer; distinguish first visit from expired/revoked only through observable HTTP signals, suppress initial-refresh session notices on public login/register routes, preserve them on protected routes, and never map all failures to `SESSION_EXPIRED`.
+- [x] 2.2 Implement one bounded, single-flight bootstrap that skips refresh when a token exists and generation-gates stale results while preserving route-aware notices.
 - [x] 2.3 Add route gates for dashboard and selector, authenticated-user redirects from login/register, pending-selection redirects, loading boundaries, and no-loop behavior.
-- [x] 2.4 Add state tests for registration, one/multiple/zero active memberships, bootstrap success/no-session/revoked failure, selection replacement, and logout success/error. Evidence: `tests/auth-provider.state.test.tsx` passes 7 tests under `npm test -- --run` using mocked adapters and the real provider, including a structurally valid zero-ACTIVE session-shaped fixture rejected by the production guard, isolated public `UNAUTHORIZED` and protected `SESSION_REVOKED` bootstrap cases, fresh per-test mocks, async-safe cleanup, and no act warnings.
+- [x] 2.4 Add state tests for membership outcomes, bootstrap, selection, and logout, including deterministic Strict Mode duplicate-bootstrap and late-bootstrap-versus-selection races. Evidence: nine mocked-adapter state tests plus one production-API provider integration test pass without act warnings; stale bootstrap does not call `/me` after generation invalidation.
+- [x] 2.5 Coordinate login, registration, organization selection, logout, and bootstrap through one monotonic in-memory generation so selected token/session adoption is atomic and stale work cannot publish.
 
 ## 3. Routes and Accessible UI
 
@@ -28,28 +29,30 @@ Implementation, automated tests, and maintainer manual verification are checked 
 - [x] 4.1 Execute manual contract cases for every endpoint: register `201` + `Set-Cookie`, login `200` + `Set-Cookie`, `/me` Bearer, selection Bearer/new token, refresh cookie/auth-only, logout `204`, cookie attributes, and response shapes. Evidence: maintainer manually verified desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
 - [x] 4.2 Execute manual behavior cases for first visit, valid reload, expired/revoked session, zero/one/multiple memberships, redirects, retryable selection errors, validation, unknown/network/timeout errors, no token in storage/URL, `/`, and `/health`. Evidence: maintainer manually verified desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
 - [x] 4.3 Resolve or record the local browser-cookie prerequisite: backend default port `3001` versus frontend README/env and backend `FRONTEND_URL` references to `3000`/`3001`; do not change the contract or backend in this issue.
-- [x] 4.4 Run strict OpenSpec validation, existing applicable tests, `npm run lint`, and `npm run build`; fix only approved-scope failures. Evidence: current 13 passing Vitest tests, strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run passed.
-- [ ] 4.5 After implementation, synchronize artifacts, confirm every task is verified before checking it, and archive only when the plan is complete.
+- [x] 4.4 Run strict OpenSpec validation, existing applicable tests, `npm run lint`, and `npm run build`; fix only approved-scope failures. Evidence: 16 Vitest tests across three files, strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run passed; no act warnings were emitted.
+- [ ] 4.4a Manually re-test the exact remediated multi-organization flow: selection returns both ACTIVE memberships, selects `org321`, atomically adopts the new token/session, and does not retry with the stale JWT. Do not reuse the earlier manual result.
+- [ ] 4.5 After the exact selected-session re-test, confirm every task is verified and archive only when the plan is complete; artifact synchronization is already complete.
 
 ## Scope Guard
 
-No backend changes, production auth behavior changes, dashboard expansion, organization switching, persistence, dashboard features, other out-of-scope auth features, or apply-progress artifacts. Vitest infrastructure and its development dependencies are approved only for tasks 1.4 and 2.4.
+No backend changes, dashboard expansion, organization switching, persistence, dashboard features, other out-of-scope auth features, or apply-progress files. Production auth changes are limited to the approved race and selected-session contract remediations.
 
 ## Remediation Status
 
-The approved `active-membership-guard-remediation` work unit addresses only the confirmed membership guard finding: cardinality and selection decisions use ACTIVE memberships, active tenant context is coherent, inactive activeMembership values are rejected, and membership/organization identifiers are unique. Browser/manual and accessibility verification are complete; archive remains unchecked.
+The race remediation remains intact, and the selected-session contract now accepts all retained ACTIVE memberships when one matches the selected context. Automated regressions are complete; the exact browser re-test and archive remain unchecked.
 
 ## Current Implementation Evidence
 
 - Routes and behavior are present in `src/app/(session)/auth/login/page.tsx`, `register/page.tsx`, `select-organization/page.tsx`, and `dashboard/page.tsx`; `/` and `/health` remain available.
-- `AuthProvider` owns a private in-memory access token, performs one refresh followed by `/me`, exposes `bootstrapping`, `anonymous`, `authenticated`, and `selection-required`, and clears memory on logout or failed bootstrap. `SessionBoundary` protects dashboard/selector routes and redirects entry routes without loops.
-- Runtime session validation filters decisions to `ACTIVE` memberships, requires unique membership and organization IDs, preserves nested membership organizations versus flat active membership, and rejects incoherent or zero-active sessions.
+- `AuthProvider` owns a module-memory token/session snapshot and generation, shares bootstrap across duplicate effects, skips it when a token exists, and atomically publishes only the newest auth operation. `SessionBoundary` behavior is unchanged.
+- Runtime session validation filters pre-selection decisions to `ACTIVE` memberships, requires unique membership and organization IDs, preserves nested membership organizations versus flat active membership, accepts selected context while all ACTIVE memberships remain, and rejects incoherent or zero-active sessions.
 - `auth-error.ts` maps `SESSION_EXPIRED`, `SESSION_REVOKED`, `UNAUTHORIZED`, and other known codes to safe messages. `AuthProvider` applies those session messages route-aware during failed initial refresh: public login/register remains quietly anonymous, while protected routes retain the notice. The current backend still returns `SESSION_REVOKED` for refresh without `legacylift_refresh`, so the frontend mitigation does not remove the backend contract blocker.
 - Visual/auth remediation is implemented. The maintainer manually verified desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`.
 
 ## Evidence Boundaries
 
 - `1.4`: `tests/auth-api.contract.test.ts` executes six mocked-fetch contract tests for the approved endpoint paths, methods, expected statuses, credentials, Bearer headers, response validation, observed `Set-Cookie` boundaries, auth-only refresh, and `204` handling. HttpOnly cookie attributes remain outside frontend-JS visibility.
-- `2.4`: `tests/auth-provider.state.test.tsx` executes seven mocked-adapter tests against the real provider for bounded bootstrap, distinct no-session and `SESSION_REVOKED` notices, one/multiple/zero ACTIVE membership outcomes, selection token replacement, registration, and logout handling without act warnings. The zero-ACTIVE test uses a structurally valid session-shaped fixture and asserts the provider runtime guard leaves the state anonymous; each test gets reset mocks and async-safe root cleanup.
+- `2.4`: `tests/auth-provider.state.test.tsx` executes nine mocked-adapter tests, including Strict Mode single-flight and the dangerous race order where selection publishes before stale refresh settles; it asserts stale `getMe` is never called. `tests/auth-provider.api-integration.test.tsx` leaves `auth-api.ts` real and mocks `fetch` plus `next/navigation` to exercise `requireResponse(..., isFullSession)` before provider adoption.
+- Selected-session evidence uses two ACTIVE memberships (`org123`, `org321`), selects `org321` with empty roles, and proves the provider atomically adopts the complete session and `selected-access-token` by observing logout Bearer auth. Role equality remains order-sensitive; set-equivalence behavior was not required or added.
 - `3.4`, `4.1`, and `4.2`: Maintainer manually verified desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`. The backend still returns `SESSION_REVOKED` when refresh has no `legacylift_refresh` cookie; the frontend route-aware mitigation remains documented and verified.
-- `4.5`: Proposal, exploration, spec, design, and tasks are synchronized with the current implementation and evidence, but this final synchronization/archive task remains unchecked by request; no archive is performed.
+- `4.5`: Proposal, exploration, spec, design, and tasks are synchronized with the current implementation and evidence. The task remains unchecked because the exact race re-test and archive are still pending; no archive is performed.

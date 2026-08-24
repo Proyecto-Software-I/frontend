@@ -2,7 +2,7 @@
 
 ## Intent
 
-Implement and document the authenticated journey requested by [Proyecto-Software-I/frontend#7](https://github.com/Proyecto-Software-I/frontend/issues/7): registration, login, session restoration, exceptional organization selection, logout, and the minimal authenticated dashboard. The implementation and requested manual verification now exist; final artifact synchronization and archive remain incomplete. The backend remains authoritative for sessions, memberships, organization selection, and tenant authorization.
+Implement and document the authenticated journey requested by [Proyecto-Software-I/frontend#7](https://github.com/Proyecto-Software-I/frontend/issues/7): registration, login, session restoration, exceptional organization selection, logout, and the minimal authenticated dashboard. Implementation and artifact synchronization are complete; the exact remediated race still needs manual re-testing before archive. The backend remains authoritative for sessions, memberships, organization selection, and tenant authorization.
 
 ## Scope
 
@@ -10,7 +10,7 @@ Implement and document the authenticated journey requested by [Proyecto-Software
 
 - Provide `/auth/login`, `/auth/register`, `/auth/select-organization`, and `/dashboard` through the session route group; preserve `/` and `/health`.
 - Use the existing API client with in-memory access-token state, cookie credentials, and the exact backend auth contract.
-- Restore a session with one bounded `POST /api/auth/refresh`, then authenticated `GET /api/auth/me`; keep the access token in memory and map observable `SESSION_EXPIRED`, `SESSION_REVOKED`, and `UNAUTHORIZED` responses safely.
+- Restore a session with one bounded, single-flight `POST /api/auth/refresh`, then authenticated `GET /api/auth/me`; skip bootstrap when memory already has a token and prevent stale bootstrap results from replacing newer auth operations.
 - Redirect authenticated users away from login/register, route one active membership and registration to `/dashboard`, and route multiple active memberships to organization selection.
 - Keep the dashboard limited to user, active organization, roles, logout, and `/health`; preserve `/` and `/health`.
 - Record the maintainer's completed manual verification for the browser, accessibility, responsive, endpoint, session, routing, storage, and public-route cases listed in the spec; approved Vitest contract/state tests provide automated evidence for endpoint and provider scenarios.
@@ -23,7 +23,7 @@ Implement and document the authenticated journey requested by [Proyecto-Software
 
 ## Backend Contract Dependency
 
-This frontend consumes the implemented contract from [Proyecto-Software-I/backend#5](https://github.com/Proyecto-Software-I/backend/issues/5). Register is `201` and login is `200`; both require `credentials: include`, return a full session, and set the `legacylift_refresh` cookie. `/me` is `GET`, Bearer-authenticated, and returns session context without `auth`. Select-organization is Bearer-authenticated and returns a full session with a new access token. Refresh is cookie-only with `credentials: include`, returns auth metadata only, and never returns the refresh token in JSON. Logout is Bearer-authenticated with `credentials: include` and returns `204`.
+This frontend consumes the implemented contract from [Proyecto-Software-I/backend#5](https://github.com/Proyecto-Software-I/backend/issues/5). Register is `201` and login is `200`; both require `credentials: include`, return a full session, and set the `legacylift_refresh` cookie. `/me` is `GET`, Bearer-authenticated, and returns session context without `auth`. Select-organization is Bearer-authenticated and returns a full session with a new access token, selected active context, and all memberships retained. Refresh is cookie-only with `credentials: include`, returns auth metadata only, and never returns the refresh token in JSON. Logout is Bearer-authenticated with `credentials: include` and returns `204`.
 
 **Known backend contract issue:** in the current backend, `POST /api/auth/refresh` without a `legacylift_refresh` cookie returns `SESSION_REVOKED` rather than `UNAUTHORIZED`. The frontend now treats that failed initial refresh as anonymous without a session notice on `/auth/login` and `/auth/register`, while preserving `SESSION_EXPIRED`/`SESSION_REVOKED` notices when bootstrap starts on protected routes. This is a frontend route-aware mitigation, not a backend contract discrepancy fix or a frontend contract change.
 
@@ -41,4 +41,4 @@ The cookie is `legacylift_refresh; HttpOnly; SameSite=Lax; Secure` only in produ
 
 ## Success Criteria
 
-Strict OpenSpec validation, lint, build, TypeScript validation, git diff checking, lockfile dry-run, and the focused Vitest suite have passed: 13 Vitest tests pass. The implementation covers registration, login, zero/one/multiple membership decisions, bounded bootstrap, selection, refresh, logout, protected navigation, known error mapping, and the approved visual/accessibility remediation. The maintainer manually verified desktop/mobile UI, keyboard/focus, responsive layout, auth endpoint contract cases, cookie/CORS behavior, first visit/reload, expired/revoked session, zero/one/multiple memberships, redirects, retry/error states, no token in storage/URL, `/`, and `/health`. The local no-cookie refresh behavior remains a backend discrepancy, mitigated route-aware by the frontend.
+The focused suite includes deterministic Strict Mode duplicate-bootstrap, late-bootstrap-versus-selection, and selected-session regressions through both mocked adapters and the production API validation path. A selected session may retain multiple ACTIVE memberships while one matching membership is active. Prior manual verification remains valid, but the exact remediated multi-organization flow MUST be manually re-tested before archive; that final re-test has not yet occurred.

@@ -152,7 +152,6 @@ function isCoherentSessionContext(
   }
 
   if (
-    activeMemberships.length !== 1 ||
     !isOrganization(activeOrganization) ||
     !isActiveMembership(activeMembership)
   ) {

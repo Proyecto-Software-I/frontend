@@ -36,6 +36,33 @@ export function sessionWithZeroActiveMemberships(
   return sessionWithMemberships(1, false, accessToken, "INACTIVE");
 }
 
+export function selectedSessionWithMultipleMemberships(
+  accessToken = "selected-access-token",
+): FullSession {
+  const session = sessionWithMemberships(2, false, accessToken);
+  session.memberships = [
+    { id: "membership123", status: "ACTIVE", organization: { id: "org123", name: "Organization 123", slug: "organization-123" }, roles: ["OWNER"] },
+    { id: "membership321", status: "ACTIVE", organization: { id: "org321", name: "Organization 321", slug: "organization-321" }, roles: [] },
+  ];
+  session.activeOrganization = session.memberships[1].organization;
+  session.activeMembership = {
+    id: session.memberships[1].id,
+    status: session.memberships[1].status,
+    roles: session.memberships[1].roles,
+  };
+  return session;
+}
+
+export function preSelectionSessionWithMultipleMemberships(
+  accessToken = "pending-token",
+): FullSession {
+  const session = selectedSessionWithMultipleMemberships(accessToken);
+  session.activeOrganization = null;
+  session.activeMembership = null;
+  session.requiresOrganizationSelection = true;
+  return session;
+}
+
 export function contextFromSession(session: FullSession): SessionContext {
   return { user: session.user, activeOrganization: session.activeOrganization, activeMembership: session.activeMembership, memberships: session.memberships, requiresOrganizationSelection: session.requiresOrganizationSelection };
 }

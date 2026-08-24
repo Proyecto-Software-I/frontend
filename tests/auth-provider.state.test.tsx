@@ -1,4 +1,4 @@
-import { act } from "react";
+import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,7 +6,9 @@ import { ApiError } from "@/lib/api/api-error";
 import { isSessionContext } from "@/features/auth/types/auth";
 import {
   contextFromSession,
+  preSelectionSessionWithMultipleMemberships,
   refreshResponse,
+  selectedSessionWithMultipleMemberships,
   sessionWithMemberships,
   sessionWithZeroActiveMemberships,
 } from "./auth-fixtures";
@@ -34,7 +36,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => mocks.pathname,
 }));
 
-import { AuthProvider, useAuth } from "@/features/auth/hooks/auth-provider";
+import { AuthProvider, resetAuthMemoryForTests, useAuth } from "@/features/auth/hooks/auth-provider";
 
 function Probe() {
   const auth = useAuth();
@@ -43,9 +45,11 @@ function Probe() {
       data-status={auth.status}
       data-notice={auth.notice ?? ""}
       data-organization={auth.session?.activeOrganization?.id ?? ""}
+      data-memberships={auth.session?.memberships.length ?? 0}
+      data-roles={auth.session?.activeMembership?.roles.join(",") ?? ""}
     >
       <button onClick={() => void auth.signUp({ email: "new@example.com", password: "password", firstName: "New", lastName: "User", organizationName: "New Org" }).catch(() => undefined)}>sign-up</button>
-      <button onClick={() => void auth.chooseOrganization("organization-2").catch(() => undefined)}>choose</button>
+      <button onClick={() => void auth.chooseOrganization("org321").catch(() => undefined)}>choose</button>
       <button onClick={() => void auth.signOut().catch(() => undefined)}>sign-out</button>
     </div>
   );
@@ -59,17 +63,18 @@ function attribute(name: string) {
   return probe()?.getAttribute(name);
 }
 
-async function renderProvider(): Promise<Root> {
+async function renderProvider(strict = false): Promise<Root> {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
   mountedRoots.push(root);
   await act(async () => {
-    root.render(
+    const provider = (
       <AuthProvider>
         <Probe />
-      </AuthProvider>,
+      </AuthProvider>
     );
+    root.render(strict ? <StrictMode>{provider}</StrictMode> : provider);
     await new Promise((resolve) => setTimeout(resolve, 0));
     await new Promise((resolve) => setTimeout(resolve, 0));
     await Promise.resolve();
@@ -93,6 +98,7 @@ const mountedRoots: Root[] = [];
 
 describe("AuthProvider state transitions", () => {
   beforeEach(() => {
+    resetAuthMemoryForTests();
     document.body.innerHTML = "";
     mocks.pathname = "/auth/login";
     Object.values(mocks).forEach((mock) => {
@@ -121,18 +127,61 @@ describe("AuthProvider state transitions", () => {
     expect(mocks.getMe).toHaveBeenCalledWith("refresh-token-1");
   });
 
+  it("shares one bootstrap across Strict Mode duplicate effects", async () => {
+    const pendingRefresh = deferred<ReturnType<typeof refreshResponse>>();
+    mocks.refresh.mockReturnValue(pendingRefresh.promise);
+    await renderProvider(true);
+
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+    await settle(() => pendingRefresh.resolve(refreshResponse()));
+
+    expect(attribute("data-status")).toBe("authenticated");
+    expect(mocks.getMe).toHaveBeenCalledOnce();
+    await renderProvider();
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a selected session when an older bootstrap succeeds after selection", async () => {
+    const pendingRefresh = deferred<ReturnType<typeof refreshResponse>>();
+    const pendingSelection = deferred<ReturnType<typeof sessionWithMemberships>>();
+    mocks.refresh.mockReturnValue(pendingRefresh.promise);
+    mocks.register.mockResolvedValue(preSelectionSessionWithMultipleMemberships());
+    mocks.selectOrganization.mockReturnValue(pendingSelection.promise);
+    await renderProvider();
+
+    await click("sign-up");
+    await click("choose");
+
+    const selected = selectedSessionWithMultipleMemberships();
+    await settle(() => pendingSelection.resolve(selected));
+
+    expect(attribute("data-status")).toBe("authenticated");
+    expect(attribute("data-organization")).toBe("org321");
+    expect(attribute("data-memberships")).toBe("2");
+    expect(attribute("data-roles")).toBe("");
+
+    await settle(() => pendingRefresh.resolve(refreshResponse("stale-bootstrap-token")));
+
+    expect(mocks.getMe).not.toHaveBeenCalled();
+    expect(attribute("data-status")).toBe("authenticated");
+    expect(attribute("data-organization")).toBe("org321");
+    await click("sign-out");
+    expect(mocks.logout).toHaveBeenCalledWith("selected-access-token");
+  });
+
   it("requires selection for multiple memberships and replaces the session after selection", async () => {
     mocks.getMe.mockResolvedValue(contextFromSession(sessionWithMemberships(2)));
     mocks.selectOrganization.mockResolvedValue(
-      sessionWithMemberships(1, false, "selected-access-token"),
+      selectedSessionWithMultipleMemberships(),
     );
     await renderProvider();
 
     expect(attribute("data-status")).toBe("selection-required");
     await click("choose");
     expect(attribute("data-status")).toBe("authenticated");
-    expect(attribute("data-organization")).toBe("organization-1");
-    expect(mocks.selectOrganization).toHaveBeenCalledWith("refresh-token-1", "organization-2");
+    expect(attribute("data-organization")).toBe("org321");
+    expect(attribute("data-memberships")).toBe("2");
+    expect(mocks.selectOrganization).toHaveBeenCalledWith("refresh-token-1", "org321");
     await click("sign-out");
     expect(mocks.logout).toHaveBeenCalledWith("selected-access-token");
   });
@@ -189,13 +238,29 @@ describe("AuthProvider state transitions", () => {
     await renderProvider();
     await click("sign-out");
     expect(attribute("data-status")).toBe("anonymous");
-    document.body.innerHTML = "";
 
-    mocks.refresh.mockResolvedValue(refreshResponse());
-    mocks.getMe.mockResolvedValue(contextFromSession(sessionWithMemberships(1)));
-    await renderProvider();
+    mocks.register.mockResolvedValue(sessionWithMemberships(1));
+    await click("sign-up");
     mocks.logout.mockRejectedValue(new Error("network failure"));
     await click("sign-out");
     expect(attribute("data-status")).toBe("authenticated");
   });
 });
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
+async function settle(action: () => void) {
+  await act(async () => {
+    action();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
+  });
+}

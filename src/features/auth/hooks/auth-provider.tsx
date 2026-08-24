@@ -5,7 +5,7 @@ import {
   useContext,
   useEffect,
   useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
@@ -46,6 +46,72 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const protectedPaths = new Set(["/dashboard", "/auth/select-organization"]);
+const initialState: AuthState = {
+  status: "bootstrapping",
+  session: null,
+  notice: null,
+};
+
+let authMemory = {
+  accessToken: null as string | null,
+  state: initialState,
+  generation: 0,
+  bootstrapSettled: false,
+};
+let bootstrapFlight: Promise<{ accessToken: string; session: SessionContext }> | null = null;
+let bootstrapGeneration = 0;
+const listeners = new Set<() => void>();
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function publish(state: AuthState, accessToken: string | null) {
+  authMemory = { ...authMemory, state, accessToken };
+  listeners.forEach((listener) => listener());
+}
+
+function beginOperation() {
+  authMemory.generation += 1;
+  authMemory.bootstrapSettled = true;
+  return authMemory.generation;
+}
+
+function adoptFullSession(operation: number, fullSession: FullSession) {
+  if (authMemory.generation !== operation) return;
+  publish(
+    {
+      status: sessionStatus(fullSession),
+      session: contextFromFullSession(fullSession),
+      notice: null,
+    },
+    fullSession.auth.accessToken,
+  );
+}
+
+function startBootstrap() {
+  if (authMemory.accessToken || authMemory.bootstrapSettled) return null;
+  if (bootstrapFlight) return bootstrapFlight;
+
+  bootstrapGeneration = authMemory.generation;
+  const flight = (async () => {
+    const refreshed = await refresh();
+    if (authMemory.generation !== bootstrapGeneration) {
+      throw new Error("Bootstrap superseded by a newer authentication operation.");
+    }
+    const session = await getMe(refreshed.auth.accessToken);
+    if (!isSessionContext(session)) {
+      throw new Error("El backend devolvió una respuesta de autenticación inesperada.");
+    }
+    return { accessToken: refreshed.auth.accessToken, session };
+  })();
+  bootstrapFlight = flight;
+  void flight.finally(() => {
+    if (bootstrapFlight === flight) bootstrapFlight = null;
+  }).catch(() => undefined);
+  return flight;
+}
 
 function sessionStatus(session: SessionContext): AuthStatus {
   return session.requiresOrganizationSelection
@@ -66,56 +132,33 @@ function contextFromFullSession(fullSession: FullSession): SessionContext {
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const initialPathnameRef = useRef(pathname);
-  const accessTokenRef = useRef<string | null>(null);
-  const [state, setState] = useState<AuthState>({
-    status: "bootstrapping",
-    session: null,
-    notice: null,
-  });
+  const state = useSyncExternalStore(subscribe, () => authMemory.state, () => initialState);
 
   useEffect(() => {
     let cancelled = false;
-
-    async function bootstrap() {
-      try {
-        const refreshed = await refresh();
-        const session = await getMe(refreshed.auth.accessToken);
-
-        if (!isSessionContext(session)) {
-          throw new Error("El backend devolvió una respuesta de autenticación inesperada.");
-        }
-
-        if (cancelled) {
-          return;
-        }
-
-        accessTokenRef.current = refreshed.auth.accessToken;
-        setState({
-          status: sessionStatus(session),
-          session,
-          notice: null,
-        });
-      } catch (error: unknown) {
-        if (cancelled) {
-          return;
-        }
-
-        accessTokenRef.current = null;
-        setState({
-          status: "anonymous",
-          session: null,
-          notice:
+    const flight = startBootstrap();
+    const generation = bootstrapGeneration;
+    if (flight) {
+      void flight.then(
+        ({ accessToken, session }) => {
+          if (cancelled || authMemory.generation !== generation || authMemory.bootstrapSettled) return;
+          authMemory.bootstrapSettled = true;
+          publish({ status: sessionStatus(session), session, notice: null }, accessToken);
+        },
+        (error: unknown) => {
+          if (cancelled || authMemory.generation !== generation || authMemory.bootstrapSettled) return;
+          authMemory.bootstrapSettled = true;
+          const notice =
             protectedPaths.has(initialPathnameRef.current) &&
             error instanceof ApiError &&
             (error.code === "SESSION_EXPIRED" ||
               error.code === "SESSION_REVOKED")
               ? getAuthErrorMessage(error, "session")
-              : null,
-        });
-      }
+              : null;
+          publish({ status: "anonymous", session: null, notice }, null);
+        },
+      );
     }
-
-    void bootstrap();
 
     return () => {
       cancelled = true;
@@ -123,50 +166,42 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, []);
 
   async function signIn(input: LoginInput): Promise<void> {
+    const operation = beginOperation();
     const fullSession = await login(input);
-    accessTokenRef.current = fullSession.auth.accessToken;
-    setState({
-      status: sessionStatus(fullSession),
-      session: contextFromFullSession(fullSession),
-      notice: null,
-    });
+    adoptFullSession(operation, fullSession);
   }
 
   async function signUp(input: RegisterInput): Promise<void> {
+    const operation = beginOperation();
     const fullSession = await register(input);
-    accessTokenRef.current = fullSession.auth.accessToken;
-    setState({
-      status: sessionStatus(fullSession),
-      session: contextFromFullSession(fullSession),
-      notice: null,
-    });
+    adoptFullSession(operation, fullSession);
   }
 
   async function chooseOrganization(organizationId: string): Promise<void> {
-    const accessToken = accessTokenRef.current;
+    const accessToken = authMemory.accessToken;
     if (!accessToken) {
       throw new Error("La sesión ya no está disponible.");
     }
 
+    const operation = beginOperation();
     const fullSession = await selectOrganization(accessToken, organizationId);
-    accessTokenRef.current = fullSession.auth.accessToken;
-    setState({
-      status: sessionStatus(fullSession),
-      session: contextFromFullSession(fullSession),
-      notice: null,
-    });
+    adoptFullSession(operation, fullSession);
   }
 
   async function signOut(): Promise<void> {
-    const accessToken = accessTokenRef.current;
+    const accessToken = authMemory.accessToken;
+    const operation = beginOperation();
     if (!accessToken) {
-      setState({ status: "anonymous", session: null, notice: null });
+      if (authMemory.generation === operation) {
+        publish({ status: "anonymous", session: null, notice: null }, null);
+      }
       return;
     }
 
     await logout(accessToken);
-    accessTokenRef.current = null;
-    setState({ status: "anonymous", session: null, notice: null });
+    if (authMemory.generation === operation) {
+      publish({ status: "anonymous", session: null, notice: null }, null);
+    }
   }
 
   return (
@@ -177,13 +212,23 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         signUp,
         chooseOrganization,
         signOut,
-        clearNotice: () =>
-          setState((current) => ({ ...current, notice: null })),
+        clearNotice: () => publish({ ...authMemory.state, notice: null }, authMemory.accessToken),
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function resetAuthMemoryForTests() {
+  authMemory = {
+    accessToken: null,
+    state: initialState,
+    generation: 0,
+    bootstrapSettled: false,
+  };
+  bootstrapFlight = null;
+  bootstrapGeneration = 0;
 }
 
 export function useAuth(): AuthContextValue {

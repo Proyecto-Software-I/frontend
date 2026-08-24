@@ -11,7 +11,7 @@ The application MUST use the following methods, paths, credentials, statuses, re
 | Register | `POST /api/auth/register`, body `email`, `password`, `firstName`, `lastName`, `organizationName`; `credentials: include`; no Bearer | `201` | Full session (`user`, `auth`, `activeOrganization`, `activeMembership`, `memberships`, `requiresOrganizationSelection: false`) and `Set-Cookie` |
 | Login | `POST /api/auth/login`, body `email`, `password`; `credentials: include`; no Bearer | `200` | Full session and `Set-Cookie` |
 | Me | `GET /api/auth/me`, Bearer required; no session cookie requirement | `200` | Session context without `auth` |
-| Select organization | `POST /api/auth/select-organization`, Bearer required, body `organizationId` from a listed membership | `200` | Full session with a new access token and selection false; no new refresh-token JSON field is assumed |
+| Select organization | `POST /api/auth/select-organization`, Bearer required, body `organizationId` from a listed membership | `200` | Full session with a new access token, selection false, selected active context, and all memberships retained; no new refresh-token JSON field is assumed |
 | Refresh | `POST /api/auth/refresh`, refresh cookie credentials; Bearer not required | `200` | Auth metadata only (`accessToken`, `tokenType`, `expiresIn`); refresh token is never JSON and cookie may rotate |
 | Logout | `POST /api/auth/logout`, Bearer required and cookie credentials | `204` | No response body; refresh cookie is cleared |
 
@@ -37,13 +37,13 @@ The current backend has a contract discrepancy: refresh without a `legacylift_re
 
 ### Requirement: Session shape and organization selection are contract-driven
 
-Each `memberships[]` item MUST contain a nested `organization` and `roles`. `activeMembership` MUST contain only its membership fields and `roles`; it MUST NOT contain a nested organization. The selector MUST render only validated `ACTIVE` `memberships[]` options, including nested organization name and roles, and MUST NOT accept arbitrary organization IDs or authorize from client data. Runtime validation MUST reject duplicate membership or organization identifiers and incoherent active organization/membership pairs.
+Each `memberships[]` item MUST contain a nested `organization` and `roles`. `activeMembership` MUST contain only its membership fields and `roles`; it MUST NOT contain a nested organization. The selector MUST render only validated `ACTIVE` `memberships[]` options, including nested organization name and roles, and MUST NOT accept arbitrary organization IDs or authorize from client data. Runtime validation MUST reject duplicate membership or organization identifiers and incoherent active organization/membership pairs. A selected session MAY retain multiple ACTIVE memberships; it is coherent when the active membership exists in `memberships`, is ACTIVE, and matches the selected organization and roles. Empty role arrays are valid.
 
 #### Scenario: Valid selection returns the new session
 
 - **GIVEN** a session with `requiresOrganizationSelection: true`
 - **WHEN** the user selects a listed organization and `POST /api/auth/select-organization` returns `200`
-- **THEN** the frontend replaces the whole session, uses the returned new access token in memory, and navigates to `/dashboard`
+- **THEN** the frontend accepts all retained memberships, replaces the whole session, uses the returned new access token in memory, and navigates to `/dashboard`
 
 #### Scenario: Selection failure is retryable
 
@@ -53,7 +53,13 @@ Each `memberships[]` item MUST contain a nested `organization` and `roles`. `act
 
 ### Requirement: Bootstrap distinguishes first visit from failed session restoration
 
-Bootstrap MUST perform one bounded `POST /api/auth/refresh` followed by authenticated `GET /api/auth/me`; it MUST NOT recursively refresh. A browser cannot inspect `HttpOnly`, so the frontend MUST distinguish a first visit with no cookie from an expired or revoked session only when an HTTP signal makes that distinction observable. It MUST NOT map every bootstrap failure to `SESSION_EXPIRED`.
+Bootstrap MUST perform one bounded, single-flight `POST /api/auth/refresh` followed by authenticated `GET /api/auth/me`; it MUST NOT start while a valid in-memory access token exists or recursively refresh. Late bootstrap success or failure MUST NOT replace state established by newer login, registration, organization selection, or logout operations.
+
+#### Scenario: Organization selection wins a bootstrap race
+
+- **GIVEN** organization selection and an older bootstrap overlap because an effect re-runs or remounts
+- **WHEN** selection returns a new access token/session before or after the older bootstrap settles
+- **THEN** the frontend atomically adopts the selected token/session and ignores the stale bootstrap result
 
 #### Scenario: Valid reload
 
@@ -127,6 +133,6 @@ Browser-cookie contract testing MUST record the configured frontend origin, back
 
 #### Scenario: Contract verification matrix
 
-- **GIVEN** the configured Vitest suite with mocked fetch boundaries
+- **GIVEN** the configured Vitest suite with mocked adapter and fetch boundaries
 - **WHEN** the listed endpoint cases are executed
-- **THEN** automated tests verify status, request credentials, Bearer requirements, full versus auth-only response shape, observed `Set-Cookie` headers, nested membership organization, and absence of refresh token in JSON; the current evidence also records 13 passing Vitest tests, strict OpenSpec validation, lint, TypeScript, build, git diff check, lockfile dry-run, and the maintainer's manual verification note above
+- **THEN** automated tests verify status, request credentials, Bearer requirements, production full-session validation and provider adoption for selected `org321` with two ACTIVE memberships and empty roles, and bootstrap coordination without a stale `/me` request; the exact remediated browser re-test remains pending
