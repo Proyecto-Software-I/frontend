@@ -51,7 +51,7 @@ Cuando la integración requiera obtener o restaurar la sesión, se utilizarán l
 
 ### UI y Material Symbols
 
-La interfaz utilizará primero `Button`, `Card`, `Badge`, `Separator` y demás primitivas disponibles en `src/components/ui`, junto con tokens semánticos existentes. Los iconos del App Shell serán Google Material Symbols, cargados mediante la hoja de estilos de Google Fonts en el límite global de estilos y usados con la familia `Material Symbols Outlined`. No se utilizará `lucide-react` para los nuevos iconos ni se agregará una dependencia npm de iconos. La configuración y la convención de uso se documentarán en `AGENTS.md`.
+La interfaz utilizará primero `Button`, `Card`, `Badge`, `Separator` y demás primitivas disponibles en `src/components/ui`, junto con tokens semánticos existentes. Los iconos del App Shell serán Google Material Symbols variables, cargados mediante un `<link>` en el `<head>` del layout raíz con `icon_names` y `display=block`, y usados con la familia `Material Symbols Outlined` y los ejes `FILL`, `wght`, `GRAD` y `opsz` configurados en CSS. El sidebar será visible en desktop y se desplegará como un `<aside>` móvil desde el botón hamburguesa; sus opciones futuras serán solo visuales y no habilitarán rutas inexistentes. No se utilizará `lucide-react` para los nuevos iconos ni se agregará una dependencia npm de iconos. La configuración y la convención de uso se documentarán en `AGENTS.md`.
 
 ### Estados de navegación
 
@@ -66,6 +66,11 @@ El estado de carga se renderizará antes de mostrar datos privados. Las decision
 - **[Datos privados obsoletos durante bootstrap]** → No renderizar el contenido autenticado mientras Auth indique carga y no leer tenant desde storage o URL.
 - **[Material Symbols introduce una integración externa]** → No incorporar paquetes nuevos; documentar la configuración elegida y revisar su impacto de carga, fallback y accesibilidad.
 - **[El shell crece junto con futuras features]** → Mantenerlo limitado a header, contexto, contenido principal y logout; no incluir navegación funcional de páginas todavía inexistentes.
+
+## Verification Strategy
+
+- Revisar que los estados de Auth no permitan renderizar el shell sin organización activa y que el dashboard consuma únicamente `useAuth`.
+- Ejecutar smoke checks de las rutas existentes en Next dev y validar TypeScript, ESLint y OpenSpec estricto.
 
 ## Migration Plan
 
