@@ -69,6 +69,8 @@ All task checkboxes are complete. Source inspection found the requested implemen
 
 **Compliance summary**: 13/13 scenarios compliant. Automated tests cover contract and provider-critical behavior; the explicitly approved UI/browser scenarios use recorded maintainer runtime evidence.
 
+**Automated evidence boundary**: Registration asserts its request body; login does not assert its body or absence of Authorization; refresh explicitly asserts no Bearer. `/me`, selection, and logout assert required Bearer headers, and selection asserts its body. Production behavior was also confirmed by source inspection.
+
 ### Correctness (Static Evidence)
 
 | Requirement | Status | Notes |
@@ -89,7 +91,7 @@ All task checkboxes are complete. Source inspection found the requested implemen
 | Single-flight and generation coordination | ✅ Yes | Duplicate effects share bootstrap; auth operations invalidate stale work |
 | Extend existing HTTP client | ✅ Yes | Existing `apiRequest` supports credentials, Bearer, typed errors, timeout, and `204` |
 | Runtime external-data guards | ✅ Yes | Full-session, context, token, membership, identity uniqueness, and coherence guards are present |
-| Reuse UI primitives and semantic tokens | ✅ Yes | Button, Card, Badge, and semantic token classes are reused; no dependency/global-style change |
+| Reuse UI primitives and semantic tokens | ✅ Yes | Button, Card, Badge, and semantic token classes are reused; no global-style or production runtime dependency change. Approved test-only changes added Vitest, jsdom, the `test` script, package metadata, and `vitest.config.ts` |
 
 ### Production and Manual Evidence
 

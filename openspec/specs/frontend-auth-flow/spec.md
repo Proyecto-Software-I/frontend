@@ -1,6 +1,9 @@
-# Delta for frontend-auth-flow
+# frontend-auth-flow Specification
 
-## ADDED Requirements
+## Purpose
+Defines the multi-tenant frontend authentication journey, including registration, login, bounded session restoration, organization selection, protected navigation, safe logout, and the minimal authenticated dashboard.
+
+## Requirements
 
 ### Requirement: Authentication endpoints use the exact backend contract
 
@@ -129,10 +132,10 @@ The frontend MUST preserve the backend error envelope `{ statusCode, code, messa
 
 ### Requirement: Local integration is a verification prerequisite
 
-Browser-cookie contract testing MUST record the configured frontend origin, backend origin, backend port, CORS origin, `credentials: true`, cookie attributes, and `NEXT_PUBLIC_API_URL`. Current local documentation conflicts: backend defaults to `3001`, while frontend README/env and backend `FRONTEND_URL` references include `3000` and `3001`. This mismatch MUST be resolved or explicitly recorded as a blocker for local browser-cookie verification; it MUST NOT change the API contract.
+Browser-cookie contract testing MUST record the configured frontend origin, backend origin, backend port, CORS origin, `credentials: true`, cookie attributes, and `NEXT_PUBLIC_API_URL`. Current local documentation conflicts: backend defaults to `3001`, while frontend README/env and backend `FRONTEND_URL` references include `3000` and `3001`. This mismatch MUST be resolved or explicitly recorded as a local verification constraint; it MUST NOT change the API contract.
 
 #### Scenario: Contract verification matrix
 
 - **GIVEN** the configured Vitest suite with mocked adapter and fetch boundaries
 - **WHEN** the listed endpoint cases are executed
-- **THEN** automated tests verify status, request credentials, Bearer requirements, production full-session validation and provider adoption for selected `org321` with two ACTIVE memberships and empty roles, and bootstrap coordination without a stale `/me` request; the exact restarted-server, incognito browser flow also passed without a follow-up `401` or `SESSION_REVOKED`
+- **THEN** automated tests verify statuses and applicable credentials; registration and selection request bodies; explicit absence of Bearer on refresh; required Bearer on `/me`, selection, and logout; production full-session validation and provider adoption for selected `org321` with two ACTIVE memberships and empty roles; and bootstrap coordination without a stale `/me` request. The login contract test does not attribute evidence to its request body or absence of Authorization; the exact restarted-server, incognito browser flow also passed without a follow-up `401` or `SESSION_REVOKED`

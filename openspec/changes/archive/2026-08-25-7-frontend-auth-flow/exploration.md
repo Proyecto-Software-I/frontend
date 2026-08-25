@@ -29,13 +29,13 @@ The backend enables CORS with credentials and uses the refresh cookie at path `/
 - `src/features/auth/types/*` — define the single auth response/session model, including nested membership organizations, nullable active tenant fields, token metadata, and explicit state flags.
 - `src/features/auth/hooks/*` and/or a feature-level provider — own the in-memory auth state and restoration lifecycle instead of duplicating it across pages.
 - `src/features/auth/components/*` — provide form, organization-selection, loading, error, and success presentations using existing `src/components/ui/button.tsx`, `card.tsx`, and available primitives.
-- `src/app/auth/login/page.tsx` — implement the login entry route and redirect based on the backend tenant-resolution flags.
-- `src/app/auth/register/page.tsx` — implement registration and direct navigation to `/dashboard` after the backend-created organization is active.
-- `src/app/auth/select-organization/page.tsx` — render only the backend-provided `memberships[]` options and submit the selected organization ID.
-- `src/app/dashboard/page.tsx` — add the temporary authenticated placeholder, active organization/roles display, logout action, and `/health` link.
-- `src/app/layout.tsx` and route protection boundary — potentially affected only if the chosen session bootstrap or navigation strategy requires a provider/layout boundary; no change is justified yet.
+- `src/app/(session)/auth/login/page.tsx` — implement the `/auth/login` entry route and redirect based on the backend tenant-resolution flags.
+- `src/app/(session)/auth/register/page.tsx` — implement `/auth/register` and direct navigation to `/dashboard` after the backend-created organization is active.
+- `src/app/(session)/auth/select-organization/page.tsx` — implement `/auth/select-organization`, render only the backend-provided `memberships[]` options, and submit the selected organization ID.
+- `src/app/(session)/dashboard/page.tsx` — implement the temporary `/dashboard` placeholder, active organization/roles display, logout action, and `/health` link.
+- `src/app/(session)/layout.tsx` — installs and composes `AuthProvider` with `SessionBoundary` for the session route group while leaving root and `/health` behavior available.
 - `src/app/page.tsx` and `src/app/health/page.tsx` — behavior must remain available; the landing auth links must become valid routes and the health integration must remain unchanged.
-- `package.json` — no change is expected. `npm run check` already exists and runs strict OpenSpec validation, lint, and build.
+- `package.json`, `package-lock.json`, and `vitest.config.ts` — bounded test-only infrastructure was subsequently approved: Vitest, jsdom, and the `test` script. No production runtime dependency was added; `npm run check` remains strict OpenSpec validation, lint, and build.
 
 ### Approaches
 
@@ -117,16 +117,16 @@ Out of scope: changing the backend contract or backend implementation; creating 
 - Incorrect `credentials` or cookie-path handling will make refresh appear logged out after reload even when the backend session is valid.
 - Treating `organizationId` as authorization rather than backend-selected context would violate the multi-tenant boundary.
 - Making the full layout or all pages client components would increase coupling and contradict the existing Server Component default.
-- The current frontend has no auth tests or established route-guard pattern; verification will need focused manual scenarios and the existing `npm run check` unless the approved plan justifies tests without adding infrastructure.
+- The approved Vitest/jsdom harness now provides 16 focused auth tests across three files; browser/accessibility coverage remains documented maintainer evidence rather than an automated E2E suite.
 
 ### Ready for Proposal
 
-Yes. The backend contract and the current proposal/spec/design/tasks resolve the former error-code, route-protection, bootstrap, and redirect questions. The no-cookie refresh discrepancy remains a backend blocker documented for coordination; it does not require a frontend contract change. In interactive mode, the next phase (`sdd-propose`) still requires explicit user approval before it starts, and exploration does not authorize implementation.
+Yes. The backend contract and synchronized proposal/spec/design/tasks resolve the former error-code, route-protection, bootstrap, and redirect questions. The no-cookie refresh discrepancy remains an external non-blocking backend warning documented for coordination; it does not require a frontend contract change.
 
-**Status**: planning-ready
+**Status**: verified-pass-with-warnings
 **Executive Summary**: Explored frontend issue #7, which was successfully read from GitHub earlier, against the real frontend and sibling backend repositories. The recommended direction is a feature-owned, in-memory auth state over the existing API client; known and generic backend errors are mapped safely without changing the backend contract.
 **Artifacts**: `openspec/changes/7-frontend-auth-flow/exploration.md`
-**Next Recommended**: Run native final verification; archive only after a passing verify report. No verification or archive is performed in this task.
+**Next Recommended**: Archive the verified change. Final verification completed **PASS WITH WARNINGS** with 19/19 tasks, 6/6 requirements, 13/13 scenarios, 16/16 tests, and no blockers or critical findings; archive has not occurred.
 **Risks**: Cross-origin refresh-cookie behavior remains dependent on the documented `3000`/`3001` topology prerequisite; unrecognized or non-observable failures must remain generic.
 **Skill Resolution**: exact-path — loaded `C:\Users\brahi\.config\opencode\skills\sdd-explore\SKILL.md`, `C:\Users\brahi\.config\opencode\skills\_shared\SKILL.md`, and `C:\Users\brahi\.config\opencode\skills\cognitive-doc-design\SKILL.md`.
 
@@ -139,6 +139,6 @@ Yes. The backend contract and the current proposal/spec/design/tasks resolve the
 - Automated evidence: 16 Vitest tests across three files passed on clean commit `a8a2f4b` without act warnings; prior strict OpenSpec validation, lint, TypeScript, build, git diff check, and lockfile dry-run passed.
 - Exact manual evidence: after a full frontend dev-server restart, an incognito login as the real multi-organization user and one `org321` selection loaded its dashboard; selection returned `200` with no follow-up `401` or `SESSION_REVOKED`.
 
-### Backend Blocker
+### External Backend Warning
 
-The current backend returns `SESSION_REVOKED` for refresh without a `legacylift_refresh` cookie, where the frontend contract expects an anonymous `UNAUTHORIZED` distinction. The provider now suppresses that initial-refresh notice on `/auth/login` and `/auth/register` while retaining it on protected routes. This is a route-aware frontend mitigation; the backend contract issue remains to be coordinated separately.
+The current backend returns `SESSION_REVOKED` for refresh without a `legacylift_refresh` cookie, where the frontend contract expects an anonymous `UNAUTHORIZED` distinction. The provider now suppresses that initial-refresh notice on `/auth/login` and `/auth/register` while retaining it on protected routes. This route-aware frontend mitigation is verified; separate backend coordination is a non-blocking external warning.

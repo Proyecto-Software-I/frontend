@@ -2,7 +2,7 @@
 
 ## Intent
 
-Implement and document the authenticated journey requested by [Proyecto-Software-I/frontend#7](https://github.com/Proyecto-Software-I/frontend/issues/7): registration, login, session restoration, exceptional organization selection, logout, and the minimal authenticated dashboard. Implementation, evidence, and artifact synchronization are complete and ready for final verification; archive follows only after a passing verify report. The backend remains authoritative for sessions, memberships, organization selection, and tenant authorization.
+Implement and document the authenticated journey requested by [Proyecto-Software-I/frontend#7](https://github.com/Proyecto-Software-I/frontend/issues/7): registration, login, session restoration, exceptional organization selection, logout, and the minimal authenticated dashboard. Final verification completed **PASS WITH WARNINGS**: 19/19 tasks, 6/6 requirements, 13/13 scenarios, and 16/16 tests passed with no blockers or critical findings. Archive is the next phase and has not occurred. The backend remains authoritative for sessions, memberships, organization selection, and tenant authorization.
 
 ## Scope
 
@@ -17,7 +17,7 @@ Implement and document the authenticated journey requested by [Proyecto-Software
 
 ### Out of Scope
 
-- Backend implementation or contract changes, a second HTTP client/BFF, new dependencies, persistent access-token storage, or apply-progress artifacts.
+- Backend implementation or contract changes, a second HTTP client/BFF, new production runtime dependencies, persistent access-token storage, or apply-progress artifacts. Approved test-only tooling is limited to Vitest, jsdom, the `test` script, and `vitest.config.ts`.
 - A full dashboard/app shell, organization switching after entry, last-organization persistence, projects, legacy systems, settings, invitations, password recovery, email verification, OAuth, MFA, billing, or role administration.
 - Dashboard features beyond the issue #7 placeholder, or changes to `/` and `/health` behavior.
 
@@ -41,4 +41,4 @@ The cookie is `legacylift_refresh; HttpOnly; SameSite=Lax; Secure` only in produ
 
 ## Success Criteria
 
-The focused suite includes deterministic Strict Mode duplicate-bootstrap, late-bootstrap-versus-selection, and selected-session regressions through both mocked adapters and the production API validation path. A selected session may retain multiple ACTIVE memberships while one matching membership is active. After a full dev-server restart, an incognito login and one `org321` selection loaded its dashboard with a `200` selection response and no follow-up `401` or `SESSION_REVOKED`; final verification remains next.
+The focused suite includes deterministic Strict Mode duplicate-bootstrap, late-bootstrap-versus-selection, and selected-session regressions through both mocked adapters and the production API validation path. A selected session may retain multiple ACTIVE memberships while one matching membership is active. After a full dev-server restart, an incognito login and one `org321` selection loaded its dashboard with a `200` selection response and no follow-up `401` or `SESSION_REVOKED`; final verification passed with warnings and archive remains pending.
