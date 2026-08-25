@@ -5,6 +5,8 @@ const API_URL =
 
 interface ApiRequestOptions extends RequestInit {
   timeout?: number;
+  accessToken?: string;
+  expectedStatus?: number;
 }
 
 export async function apiRequest<T>(
@@ -15,6 +17,8 @@ export async function apiRequest<T>(
     timeout = 5000,
     headers,
     signal,
+    accessToken,
+    expectedStatus,
     ...requestOptions
   } = options;
 
@@ -37,17 +41,37 @@ export async function apiRequest<T>(
       ...requestOptions,
       headers: {
         Accept: "application/json",
+        ...(accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : {}),
         ...headers,
       },
       signal: controller.signal,
     });
 
-    const contentType = response.headers.get("content-type");
-    const hasJsonBody = contentType?.includes("application/json");
+    let body: unknown;
+    if (response.status !== 204) {
+      const contentType = response.headers.get("content-type");
+      const hasJsonBody = contentType?.includes("application/json");
 
-    const body: unknown = hasJsonBody
-      ? await response.json()
-      : await response.text();
+      try {
+        body = hasJsonBody ? await response.json() : await response.text();
+      } catch {
+        body = undefined;
+      }
+    }
+
+    if (expectedStatus !== undefined && response.status !== expectedStatus) {
+      throw new ApiError(
+        `La solicitud devolvió HTTP ${response.status} en lugar de HTTP ${expectedStatus}.`,
+        response.status,
+        body,
+      );
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
 
     if (!response.ok) {
       throw new ApiError(
