@@ -158,14 +158,18 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         (error: unknown) => {
           if (cancelled || authMemory.generation !== generation || authMemory.bootstrapSettled) return;
           authMemory.bootstrapSettled = true;
+          const anonymous = isAnonymousBootstrapFailure(error);
           const notice =
+            anonymous &&
             protectedPaths.has(initialPathnameRef.current) &&
             error instanceof ApiError &&
             (error.code === "SESSION_EXPIRED" ||
               error.code === "SESSION_REVOKED")
               ? getAuthErrorMessage(error, "session")
-              : null;
-          publish({ status: "anonymous", session: null, notice }, null);
+              : anonymous
+                ? null
+                : getAuthErrorMessage(error, "session");
+          publish({ status: anonymous ? "anonymous" : "error", session: null, notice }, null);
         },
       );
     }
