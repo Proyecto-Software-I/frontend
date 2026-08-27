@@ -54,6 +54,7 @@ export type AuthErrorBody = ApiErrorBody;
 export type AuthStatus =
   | "bootstrapping"
   | "anonymous"
+  | "error"
   | "authenticated"
   | "selection-required";
 

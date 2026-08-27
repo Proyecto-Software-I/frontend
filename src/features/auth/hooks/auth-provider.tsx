@@ -129,6 +129,16 @@ function contextFromFullSession(fullSession: FullSession): SessionContext {
   };
 }
 
+function isAnonymousBootstrapFailure(error: unknown): boolean {
+  if (!(error instanceof ApiError) || error.status !== 401) {
+    return false;
+  }
+
+  return ["SESSION_EXPIRED", "SESSION_REVOKED", "UNAUTHORIZED"].includes(
+    error.code ?? "",
+  );
+}
+
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const initialPathnameRef = useRef(pathname);
@@ -148,14 +158,18 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         (error: unknown) => {
           if (cancelled || authMemory.generation !== generation || authMemory.bootstrapSettled) return;
           authMemory.bootstrapSettled = true;
+          const anonymous = isAnonymousBootstrapFailure(error);
           const notice =
+            anonymous &&
             protectedPaths.has(initialPathnameRef.current) &&
             error instanceof ApiError &&
             (error.code === "SESSION_EXPIRED" ||
               error.code === "SESSION_REVOKED")
               ? getAuthErrorMessage(error, "session")
-              : null;
-          publish({ status: "anonymous", session: null, notice }, null);
+              : anonymous
+                ? null
+                : getAuthErrorMessage(error, "session");
+          publish({ status: anonymous ? "anonymous" : "error", session: null, notice }, null);
         },
       );
     }
