@@ -4,50 +4,50 @@
 
 ### Requirement: App Shell organization switching
 
-The App Shell MUST show an organization switcher only when `session.memberships` contains at least two `ACTIVE` memberships; otherwise it MUST retain static organization context. Its visibility and options MUST derive only from those memberships. It MUST show each option's organization name and an active marker only, use the existing Auth operation for a different option, and MUST NOT duplicate tenant state. Before invoking `chooseOrganization`, it MUST synchronously acquire a feature-local single-flight guard, retain that guard until the request settles on either success or failure, and then release it. React pending state and disabled options MUST provide UI feedback only and MUST NOT serve as the concurrency or mutual-exclusion mechanism.
+The App Shell MUST show an organization switcher only when `session.memberships` contains at least two `ACTIVE` memberships; otherwise it MUST retain static organization context. Its visibility and options MUST derive only from those memberships. It MUST show each option's organization name and an active marker only, use the existing Auth operation for a different option, and MUST NOT duplicate tenant state. Before invoking `chooseOrganization`, it MUST synchronously acquire a feature-local single-flight guard, retain that guard until the request settles on either success or failure, and then release it. React pending state and disabled options MUST provide UI feedback only and MUST NOT serve as the concurrency or mutual-exclusion mechanism. After a successful mobile selection, it MUST close both its dropdown and containing `WorkspaceShell` aside/overlay before navigating to `/dashboard`; on denial, it MUST keep the relevant controls open for retry.
 
 #### Scenario: Active memberships enable switching
 
-- GIVEN an authenticated session with two or more `ACTIVE` memberships
-- WHEN the App Shell renders on desktop or the existing mobile aside
-- THEN it shows a keyboard-operable switcher with only those organizations
-- AND the active organization is visibly identified with visible focus states
+- **GIVEN** an authenticated session with two or more `ACTIVE` memberships
+- **WHEN** the App Shell renders on desktop or the existing mobile aside
+- **THEN** it shows a keyboard-operable switcher with only those organizations
+- **AND** the active organization is visibly identified with visible focus states
 
 #### Scenario: Insufficient active memberships retain static context
 
-- GIVEN an authenticated session with fewer than two `ACTIVE` memberships, including inactive memberships
-- WHEN the App Shell renders
-- THEN it shows static active-organization context without a switcher
-- AND no inactive organization is selectable
+- **GIVEN** an authenticated session with fewer than two `ACTIVE` memberships, including inactive memberships
+- **WHEN** the App Shell renders
+- **THEN** it shows static active-organization context without a switcher
+- **AND** no inactive organization is selectable
 
 #### Scenario: Current organization is not reselected
 
-- GIVEN the switcher is open and the active organization is selected
-- WHEN the selection is submitted
-- THEN the control closes or remains open without an HTTP request
-- AND the Auth session, token, and roles remain unchanged
+- **GIVEN** the switcher is open and the active organization is selected
+- **WHEN** the selection is submitted
+- **THEN** the control closes or remains open without an HTTP request
+- **AND** the Auth session, token, and roles remain unchanged
 
 #### Scenario: Selection retains and releases the concurrency guard
 
-- GIVEN the switcher is open and a different active organization is selected
-- WHEN `chooseOrganization` is invoked after the synchronous feature-local single-flight guard is acquired
-- THEN the guard remains held until the request settles on success or failure and is then released
-- AND React pending state and disabled options provide UI feedback only
-- AND the current organization remains visibly active until confirmation
+- **GIVEN** the switcher is open and a different active organization is selected
+- **WHEN** `chooseOrganization` is invoked after the synchronous feature-local single-flight guard is acquired
+- **THEN** the guard remains held until the request settles on success or failure and is then released
+- **AND** React pending state and disabled options provide UI feedback only
+- **AND** the current organization remains visibly active until confirmation
 
 #### Scenario: Immediate selections start one request
 
-- GIVEN the switcher is open with multiple different active organizations available
-- WHEN two different organizations are selected immediately before the first selection settles
-- THEN exactly one `chooseOrganization` selection request starts
-- AND the second selection does not replace, cancel, or queue the first request
+- **GIVEN** the switcher is open with multiple different active organizations available
+- **WHEN** two different organizations are selected immediately before the first selection settles
+- **THEN** exactly one `chooseOrganization` selection request starts
+- **AND** the second selection does not replace, cancel, or queue the first request
 
 #### Scenario: Access is denied
 
-- GIVEN the switcher is open for an authenticated organization
-- WHEN selection returns `ORGANIZATION_ACCESS_DENIED`
-- THEN the switcher remains open with safe error feedback
-- AND the prior organization, token, and roles remain the App Shell context
+- **GIVEN** the switcher is open for an authenticated organization
+- **WHEN** selection returns `ORGANIZATION_ACCESS_DENIED`
+- **THEN** the switcher and, when applicable, its containing mobile aside/overlay remain open with safe error feedback
+- **AND** the prior organization, token, and roles remain the App Shell context
 
 ## MODIFIED Requirements
 
@@ -75,7 +75,7 @@ The App Shell MUST show an organization switcher only when `session.memberships`
 
 #### Scenario: Context replacement updates the shell
 
-- GIVEN Auth confirms a selected active organization and replacement session
-- WHEN the App Shell receives that session
-- THEN it shows the replacement organization and its current roles
-- AND it navigates to `/dashboard`
+- **GIVEN** Auth confirms a selected active organization and replacement session
+- **WHEN** the App Shell receives that session after a mobile selection
+- **THEN** it closes both the switcher dropdown and containing `WorkspaceShell` aside/overlay before navigating to `/dashboard`
+- **AND** it shows the replacement organization and its current roles

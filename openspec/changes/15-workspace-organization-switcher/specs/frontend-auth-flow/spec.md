@@ -22,10 +22,10 @@ Each `memberships[]` item MUST contain a nested `organization` and `roles`. `act
 
 #### Scenario: Access denial preserves an App Shell session
 
-- GIVEN an App Shell selection returns `ORGANIZATION_ACCESS_DENIED`
-- WHEN Auth handles the error
-- THEN it retains the prior session, token, and roles
-- AND it reports safe retryable feedback without navigating
+- **GIVEN** an App Shell selection returns `ORGANIZATION_ACCESS_DENIED`
+- **WHEN** Auth handles the error
+- **THEN** it retains the prior session, token, and roles
+- **AND** it reports safe retryable feedback without navigating
 
 ### Requirement: Error mapping is exact and safe
 

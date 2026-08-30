@@ -12,8 +12,8 @@ Let authenticated users with multiple active memberships change workspace contex
 
 - Show a switcher only when `session.memberships` contains at least two `ACTIVE` memberships; otherwise retain static organization context.
 - Provide desktop-header and existing mobile-aside access, keyboard operation, focus visibility, active identification, and safe errors.
-- Delegate a different selection to the existing Auth operation, redirect to `/dashboard` after confirmed replacement, and reflect returned roles in the App Shell.
-- Keep the control open after `ORGANIZATION_ACCESS_DENIED`, preserving the prior tenant, token, and roles for retry.
+- Delegate a different selection to the existing Auth operation, then close both the mobile switcher dropdown and containing aside/overlay before redirecting to `/dashboard` after confirmed replacement and reflecting returned roles in the App Shell.
+- Keep the relevant controls open after `ORGANIZATION_ACCESS_DENIED`, preserving the prior tenant, token, and roles for retry.
 
 ### Out of Scope
 
@@ -33,7 +33,7 @@ Let authenticated users with multiple active memberships change workspace contex
 
 ## Approach
 
-Compose a feature-local client switcher in `WorkspaceShell`. Derive active options and, before calling existing `chooseOrganization` for a different option, synchronously acquire a feature-local single-flight guard held through settlement; a caller that cannot acquire it does not start a request. React `pending` state and disabled options provide feedback only and cannot be the mutual-exclusion mechanism. The current organization remains a no-op. Auth remains the confirmed session owner. Use the smallest approved shadcn/Radix menu primitive.
+Compose a feature-local client switcher in `WorkspaceShell`. Derive active options and, before calling existing `chooseOrganization` for a different option, synchronously acquire a feature-local single-flight guard held through settlement; a caller that cannot acquire it does not start a request. React `pending` state and disabled options provide feedback only and cannot be the mutual-exclusion mechanism. The current organization remains a no-op. Auth remains the confirmed session owner. Generate shadcn `DropdownMenu`, which uses the existing unified `radix-ui` direct dependency; no dependency is added.
 
 ## Affected Areas
 
@@ -59,7 +59,8 @@ Revert the feature-local switcher and its tests; Auth state and backend contract
 ## Dependencies
 
 - Existing Auth selection contract and `ACTIVE` membership validation.
-- Maintainer plan approval before implementation. PR strategy: ask before delivery slicing; review budget: 800 changed lines.
+- Existing shadcn `^4.16.1` and unified `radix-ui` `^1.6.7` direct dependency; no additional package is required.
+- Maintainer plan approval before implementation. Delivery is one implementation PR within the approved 800-line budget.
 
 ## Success Criteria
 

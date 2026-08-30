@@ -10,7 +10,7 @@ Add a feature-local client `OrganizationSwitcher` to the existing client `Worksp
 |---|---|---|
 | Reuse `SessionContext`, `Membership`, `ACTIVE_MEMBERSHIP_STATUS`, and `useAuth` | Feature-local types or provider | Auth validates membership coherence and owns the in-memory token/session; a second source could be stale. |
 | Use a feature-local client switcher with a synchronous single-flight guard | Put selection logic in `WorkspaceShell` or Auth | It isolates menu state and errors while synchronously preventing overlapping selections before Auth invocation. Auth remains transport and atomic-session owner. |
-| Add the smallest shadcn/Radix dropdown-menu primitive | Custom menu or another UI library | No menu primitive exists. This supplies semantic menu behavior and focus management without a new package. |
+| Generate shadcn `DropdownMenu` from unified `radix-ui` | Custom menu, separate `@radix-ui/react-*` packages, or another UI library | No menu primitive exists. The repository already directly declares shadcn `^4.16.1` and unified `radix-ui` `^1.6.7`; current shadcn new-york output imports from `radix-ui`, so no dependency is added. |
 | Redirect only after successful selection | Navigate before the request or refresh the route | `chooseOrganization` replaces the full session/token before resolving, preventing mixed tenant state. |
 
 ## Component Boundaries
@@ -28,15 +28,16 @@ active Auth session
   -> user chooses a different organization
   -> chooseOrganization -> POST select-organization
   -> validated FullSession -> atomic Auth publish (session + token)
-  -> switcher closes -> router.replace("/dashboard")
+  -> switcher dropdown closes; mobile WorkspaceShell aside/overlay closes
+  -> router.replace("/dashboard")
   -> Shell/Dashboard rerender organization and current roles
 ```
 
-The switcher keeps only `open`, `pending`, and safe `error` locally. Before invoking Auth for a different organization, its handler MUST synchronously acquire a feature-local single-flight guard; it retains that guard through promise settlement and releases it in the settlement path. This guard, not React `pending` state, prevents immediate duplicate or different selections from starting a second request. `pending` mirrors the in-flight interaction for disabled UI until settlement. The active ID is a no-op: no request, stale feedback cleared, menu closed. On `ORGANIZATION_ACCESS_DENIED` or another failure, Auth has not published a replacement, so prior organization, roles, and token remain canonical. Clear `pending`, keep `open`, announce mapped safe feedback, and allow retry; a new choice clears the error. Success clears error, closes, then calls `router.replace("/dashboard")`. No tenant ID is persisted or accepted outside validated memberships.
+The switcher keeps only `open`, `pending`, and safe `error` locally. Before invoking Auth for a different organization, its handler MUST synchronously acquire a feature-local single-flight guard; it retains that guard through promise settlement and releases it in the settlement path. This guard, not React `pending` state, prevents immediate duplicate or different selections from starting a second request. `pending` mirrors the in-flight interaction for disabled UI until settlement. The active ID is a no-op: no request, stale feedback cleared, menu closed. On `ORGANIZATION_ACCESS_DENIED` or another failure, Auth has not published a replacement, so prior organization, roles, and token remain canonical. Clear `pending`, keep the dropdown and, when applicable, the `WorkspaceShell` aside/overlay open, announce mapped safe feedback, and allow retry; a new choice clears the error. Success clears error, closes the dropdown and then the containing mobile aside/overlay before calling `router.replace("/dashboard")`. No tenant ID is persisted or accepted outside validated memberships.
 
 ## Accessible Responsive Behavior
 
-Use shadcn/Radix `DropdownMenu` with a visible labelled active-organization trigger. Items contain only organization name and active marker. Preserve Enter/Space, arrow keys, Escape, focus restoration, and pending disabled state. Apply existing semantic tokens and `focus-visible` treatment. The desktop trigger replaces static header context only when available; the mobile trigger is in the open existing aside and does not close it on access denial.
+Use shadcn `DropdownMenu` with a visible labelled active-organization trigger; its generated new-york component imports from the existing unified `radix-ui` package, so no dependency is added. Items contain only organization name and active marker. Preserve Enter/Space, arrow keys, Escape, focus restoration, and pending disabled state. Apply existing semantic tokens and `focus-visible` treatment. The desktop trigger replaces static header context only when available; on mobile, successful selection closes both the dropdown and containing open aside/overlay before navigation, while access denial keeps the relevant controls open for retry.
 
 ## File Changes
 
@@ -56,7 +57,7 @@ No backend or public type changes. `chooseOrganization(organizationId)` sends th
 
 | Layer | What to Test | Approach |
 |---|---|---|
-| Component | Active-only visibility, static fallback, name/marker-only options, current no-op, pending disable, error reset, denied retry/open state | Vitest + jsdom DOM rendering with mocked Auth/router. |
+| Component | Active-only visibility, static fallback, name/marker-only options, current no-op, pending disable, error reset, successful mobile dropdown-and-aside close, denied retry/open state | Vitest + jsdom DOM rendering with mocked Auth/router. |
 | Provider/API | Immediate two-selection single flight, atomic adoption, and unchanged context on denied selection | Use a deferred `/auth/select-organization` response; trigger two different selections synchronously and assert exactly one request starts. |
 | Manual | Desktop/mobile, keyboard, route replacement, updated roles | Run both widths; inspect console and hydration errors. |
 
