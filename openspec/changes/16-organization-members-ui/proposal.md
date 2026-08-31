@@ -12,7 +12,7 @@ Proyecto-Software-I/frontend#16 (https://github.com/Proyecto-Software-I/frontend
 - Permitir que una persona autenticada con el email correcto acepte la invitacion, seleccione la nueva organizacion mediante el flujo Auth existente y continue a `/dashboard`.
 - Permitir que una persona anonima vuelva a la invitacion despues de iniciar sesion o se registre en modo invitacion sin `organizationName` y con el email de la invitacion no editable.
 - Extender el contrato Auth canonico para validar y exponer `activeMembership.permissions`, sin crear un segundo provider ni persistir access tokens o tokens de invitacion.
-- Consumir exclusivamente los contratos publicados en `Proyecto-Software-I/backend/main/openspec/specs/organization-memberships/spec.md` y `auth/spec.md`.
+- Consumir exclusivamente los contratos publicados en `Proyecto-Software-I/backend/main/openspec/specs/organization-memberships/spec.md` y `Proyecto-Software-I/backend/main/openspec/specs/auth/spec.md`.
 
 Fuera de alcance:
 
