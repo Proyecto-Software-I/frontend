@@ -6,12 +6,12 @@ Define la experiencia tenant-scoped para consultar y administrar miembros e invi
 
 ### Requirement: La pagina de miembros debe usar el tenant y los permisos autenticados
 
-La aplicacion SHALL proporcionar `/settings/members` dentro del workspace autenticado y SHALL usar `activeOrganization` como contexto visible y `activeMembership.permissions` como fuente de presentacion. La UI SHALL requerir `members.read` para mostrar el contenido y SHALL tratar al backend como autoridad final de autorizacion.
+La aplicacion SHALL proporcionar `/settings/members` dentro del workspace autenticado con el titulo `Miembros` y la explicacion `Gestiona las personas que tienen acceso a esta organización.`. La aplicacion SHALL usar `activeOrganization` como contexto visible y `activeMembership.permissions` como fuente de presentacion. La UI SHALL requerir `members.read` para mostrar el contenido y SHALL tratar al backend como autoridad final de autorizacion.
 
 #### Scenario: Usuario con permiso de lectura abre miembros
 - **GIVEN** una sesion autenticada con organizacion activa y `members.read`
 - **WHEN** el usuario abre `/settings/members`
-- **THEN** la aplicacion muestra la pagina `Members` para la organizacion activa
+- **THEN** la aplicacion muestra el titulo `Miembros` y la explicacion `Gestiona las personas que tienen acceso a esta organización.` para la organizacion activa
 - **AND** solicita miembros e invitaciones sin enviar un `organizationId` elegido por el cliente
 
 #### Scenario: Usuario sin permiso de lectura intenta acceso directo
