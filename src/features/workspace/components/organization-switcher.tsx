@@ -105,7 +105,7 @@ export function OrganizationSwitcher({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          className="w-(--radix-dropdown-menu-trigger-width) max-w-[calc(100vw-2rem)] border border-background/20 bg-foreground p-1.5 text-background"
+          className="w-(--radix-dropdown-menu-trigger-width) max-w-[calc(100vw-2rem)] border border-background/20 bg-foreground p-1.5 font-sans text-background"
           align="start"
         >
           {memberships.map((membership) => {
