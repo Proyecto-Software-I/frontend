@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { getAuthErrorMessage } from "@/features/auth/auth-error";
 import { useAuth } from "@/features/auth/hooks/auth-provider";
 
+import { OrganizationSwitcher } from "./organization-switcher";
 import { getDisplayName } from "../lib/get-display-name";
 
 export function WorkspaceShell({
@@ -94,20 +95,15 @@ export function WorkspaceShell({
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden items-center gap-5 md:flex">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  business
-                </span>
-                <span>{session.activeOrganization.name}</span>
-              </div>
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="hidden min-w-0 items-center gap-3 md:flex lg:gap-5">
+              <OrganizationSwitcher />
               <Separator orientation="vertical" className="h-7 bg-background/20" />
               <div className="flex items-center gap-2 text-sm">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   account_circle
                 </span>
-                <span className="max-w-40 truncate">{displayName}</span>
+                <span className="hidden max-w-40 truncate lg:inline">{displayName}</span>
               </div>
               <Button
                 type="button"
@@ -171,6 +167,11 @@ export function WorkspaceShell({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="border-b border-background/20 p-4">
+                <OrganizationSwitcher
+                  onSuccessfulSelection={() => setMobileNavigationOpen(false)}
+                />
+              </div>
               <WorkspaceNavigation
                 onNavigate={() => setMobileNavigationOpen(false)}
               />

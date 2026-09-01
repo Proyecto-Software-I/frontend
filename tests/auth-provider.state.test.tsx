@@ -186,13 +186,30 @@ describe("AuthProvider state transitions", () => {
     expect(mocks.logout).toHaveBeenCalledWith("selected-access-token");
   });
 
-  it("rejects a structurally valid zero-ACTIVE context through the production guard", async () => {
+  it("preserves the authenticated session and access token after denied organization selection", async () => {
+    mocks.selectOrganization.mockRejectedValue(new ApiError("denied", 403, {
+      statusCode: 403,
+      code: "ORGANIZATION_ACCESS_DENIED",
+      message: "Denied",
+    }));
+    await renderProvider();
+
+    await click("choose");
+
+    expect(attribute("data-status")).toBe("authenticated");
+    expect(attribute("data-organization")).toBe("organization-1");
+    expect(attribute("data-roles")).toBe("member");
+    await click("sign-out");
+    expect(mocks.logout).toHaveBeenCalledWith("refresh-token-1");
+  });
+
+  it("reports an invalid zero-ACTIVE context through the production guard", async () => {
     const zeroActiveSession = sessionWithZeroActiveMemberships();
     expect(isSessionContext(contextFromSession(zeroActiveSession))).toBe(false);
     mocks.getMe.mockResolvedValue(contextFromSession(zeroActiveSession));
     await renderProvider();
 
-    expect(attribute("data-status")).toBe("anonymous");
+    expect(attribute("data-status")).toBe("error");
   });
 
   it("keeps registration membership states and rejects a zero-membership result", async () => {

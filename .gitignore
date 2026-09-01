@@ -43,3 +43,6 @@ next-env.d.ts
 
 # IDEs
 /.idea
+
+# local tooling metadata
+/.codegraph/
