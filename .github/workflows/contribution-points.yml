@@ -1,0 +1,65 @@
+name: Contribution Points
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: contribution-points-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  score:
+    if: github.event.pull_request.merged == true
+    name: Score merged pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout trusted scorer
+        uses: actions/checkout@v4
+        with:
+          repository: Proyecto-Software-I/backend
+          ref: 90c2e6c7b9bf506689182adefb7ab4f6d03a4565
+          path: scorer
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Award Contribution Points
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: >-
+          python scorer/.github/scripts/contribution_points.py score-pr
+          --pr-number "$PR_NUMBER"
+          --repository Proyecto-Software-I/frontend
+
+      - name: Publish job summary
+        if: always()
+        run: |
+          if [ -f contribution-points-score.md ]; then
+            cat contribution-points-score.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload scoring report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contribution-points-frontend-pr-${{ github.event.pull_request.number }}
+          path: |
+            contribution-points-score.json
+            contribution-points-score.md
+          if-no-files-found: warn
+          retention-days: 30
