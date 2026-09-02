@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "type": "AWARD",
+  "repository": "Proyecto-Software-I/frontend",
+  "issue": 15,
+  "issueUrl": "https://github.com/Proyecto-Software-I/frontend/issues/15",
+  "pullRequest": 19,
+  "pullRequestUrl": "https://github.com/Proyecto-Software-I/frontend/pull/19",
+  "author": "brahiamsinho",
+  "size": "M",
+  "points": 3,
+  "mergedAt": "2026-09-01T01:55:34Z",
+  "awardedAt": "2026-09-02T21:40:37.726055Z",
+  "source": "backfill"
+}

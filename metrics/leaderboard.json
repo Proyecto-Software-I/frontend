@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "repository": "Proyecto-Software-I/frontend",
+  "generatedAt": "2026-09-02T21:40:37.726135Z",
+  "totalPoints": 19,
+  "awards": 4,
+  "contributors": [
+    {
+      "login": "brahiamsinho",
+      "points": 11,
+      "issues": 2,
+      "sizes": {
+        "XS": 0,
+        "S": 0,
+        "M": 1,
+        "L": 0,
+        "XL": 1
+      }
+    },
+    {
+      "login": "DarksouleaterXD",
+      "points": 5,
+      "issues": 1,
+      "sizes": {
+        "XS": 0,
+        "S": 0,
+        "M": 0,
+        "L": 1,
+        "XL": 0
+      }
+    },
+    {
+      "login": "Orlando693",
+      "points": 3,
+      "issues": 1,
+      "sizes": {
+        "XS": 0,
+        "S": 0,
+        "M": 1,
+        "L": 0,
+        "XL": 0
+      }
+    }
+  ]
+}
