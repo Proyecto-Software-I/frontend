@@ -1,0 +1,58 @@
+name: Contribution Points Backfill Dry Run
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/contribution-points-backfill.yml
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  dry-run:
+    name: Historical scoring dry run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout trusted scorer
+        uses: actions/checkout@v4
+        with:
+          repository: Proyecto-Software-I/backend
+          ref: 0a543cbb9d614ceb373b35e62bea9b04df35f187
+          path: scorer
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Calculate historical contribution points
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          python scorer/.github/scripts/contribution_points.py backfill --dry-run
+          --repository Proyecto-Software-I/frontend
+
+      - name: Publish job summary
+        if: always()
+        run: |
+          if [ -f contribution-points-dry-run.md ]; then
+            cat contribution-points-dry-run.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload dry-run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contribution-points-frontend-dry-run
+          path: |
+            contribution-points-dry-run.json
+            contribution-points-dry-run.md
+          if-no-files-found: warn
+          retention-days: 14
