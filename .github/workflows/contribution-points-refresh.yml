@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Proyecto-Software-I/backend
-          ref: d4fe54be1c4aceb57d5829296b7987976924c3d3
+          ref: a7b13d50f4060d50800ff2298d780d8234eb2ef4
           path: scorer
           persist-credentials: false
 
