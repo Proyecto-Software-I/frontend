@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "repository": "Proyecto-Software-I/frontend",
+  "scope": "sprint",
+  "generatedAt": "2026-09-02T21:58:53.639742Z",
+  "sprint": {
+    "id": "sprint-3",
+    "number": 3,
+    "name": "Plan & Prepare",
+    "start": "2026-09-28T00:00:00-04:00",
+    "end": "2026-10-12T00:00:00-04:00"
+  },
+  "totalPoints": 0,
+  "awards": 0,
+  "contributors": [],
+  "status": "upcoming"
+}

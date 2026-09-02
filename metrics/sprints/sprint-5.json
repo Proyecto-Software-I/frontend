@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "repository": "Proyecto-Software-I/frontend",
+  "scope": "sprint",
+  "generatedAt": "2026-09-02T21:58:53.639742Z",
+  "sprint": {
+    "id": "sprint-5",
+    "number": 5,
+    "name": "Productize",
+    "start": "2026-10-26T00:00:00-04:00",
+    "end": "2026-11-09T00:00:00-04:00"
+  },
+  "totalPoints": 0,
+  "awards": 0,
+  "contributors": [],
+  "status": "upcoming"
+}

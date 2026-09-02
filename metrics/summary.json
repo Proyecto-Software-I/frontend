@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "Proyecto-Software-I/frontend",
-  "generatedAt": "2026-09-02T21:40:37.726135Z",
+  "generatedAt": "2026-09-02T21:58:53.639742Z",
   "branch": "contribution-points",
   "points": {
     "XS": 1,
@@ -14,5 +14,12 @@
     "s3b4s5c"
   ],
   "awards": 4,
-  "totalPoints": 19
+  "totalPoints": 19,
+  "currentSprint": {
+    "id": "sprint-1",
+    "number": 1,
+    "name": "Ingest",
+    "start": "2026-09-01T00:00:00-04:00",
+    "end": "2026-09-14T00:00:00-04:00"
+  }
 }
