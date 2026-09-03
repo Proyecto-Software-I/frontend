@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Proyecto-Software-I/backend
-          ref: a7b13d50f4060d50800ff2298d780d8234eb2ef4
+          ref: dc3795eb664fb3879dc2486501db5d31bba31978
           path: scorer
           persist-credentials: false
 
@@ -42,7 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: >-
-          python scorer/.github/scripts/contribution_points_sprints.py score-pr
+          python scorer/.github/scripts/contribution_points_sprints_guarded.py score-pr
           --pr-number "$PR_NUMBER"
           --repository Proyecto-Software-I/frontend
 
