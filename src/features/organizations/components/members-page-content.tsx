@@ -279,7 +279,7 @@ function PendingInvitationsSection({
                   <InvitationField label="Estado" value={formatInvitationStatus(invitation.status)} />
                   <InvitationField label="Vencimiento" value={formatDate(invitation.expiresAt)} />
                   <InvitationField label="Invitado por" value={displayInviter(invitation)} />
-                  <InvitationField label="Rol" value={invitation.proposedRole.name ?? invitation.proposedRole.key} />
+                  <InvitationField label="Rol" value={displayProposedRole(invitation)} />
                   {canManageMembers ? (
                     <RevokeInvitationAction invitation={invitation} revoke={revoke} />
                   ) : null}
@@ -698,11 +698,20 @@ function displayMemberName(member: OrganizationMember): string {
 }
 
 function displayInviter(invitation: OrganizationInvitation): string {
-  return invitation.invitedBy.displayName || "Miembro de la organización";
+  return invitation.invitedBy?.displayName || "Miembro de la organización";
+}
+
+function displayProposedRole(invitation: OrganizationInvitation): string {
+  return invitation.proposedRole?.name ?? invitation.proposedRole?.key ?? "Sin rol propuesto";
 }
 
 function formatMemberStatus(status: OrganizationMember["status"]): string {
-  return { ACTIVE: "Activo", SUSPENDED: "Suspendido", REMOVED: "Eliminado" }[status];
+  return {
+    INVITED: "Invitado",
+    ACTIVE: "Activo",
+    SUSPENDED: "Suspendido",
+    REMOVED: "Eliminado",
+  }[status];
 }
 
 function formatInvitationStatus(status: OrganizationInvitation["status"]): string {
