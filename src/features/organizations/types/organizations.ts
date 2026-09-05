@@ -1,6 +1,10 @@
 import type { AuthUser, Organization } from "@/features/auth/types/auth";
 
-export type OrganizationMemberStatus = "ACTIVE" | "SUSPENDED" | "REMOVED";
+export type OrganizationMemberStatus =
+  | "INVITED"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "REMOVED";
 
 export type OrganizationInvitationStatus =
   | "PENDING"
@@ -20,7 +24,7 @@ export type OrganizationMemberUser = AuthUser & {
 export interface OrganizationMember {
   id: string;
   status: OrganizationMemberStatus;
-  joinedAt: string;
+  joinedAt: string | null;
   jobTitle: string | null;
   roles: string[];
   user: OrganizationMemberUser;
@@ -32,8 +36,8 @@ export interface OrganizationInvitation {
   status: OrganizationInvitationStatus;
   createdAt: string;
   expiresAt: string;
-  invitedBy: Pick<AuthUser, "id" | "displayName">;
-  proposedRole: OrganizationRoleSummary;
+  invitedBy: Pick<AuthUser, "id" | "displayName"> | null;
+  proposedRole: OrganizationRoleSummary | null;
 }
 
 export interface OrganizationMembersResponse {
