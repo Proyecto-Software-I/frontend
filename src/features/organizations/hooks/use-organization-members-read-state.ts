@@ -218,11 +218,9 @@ export function useOrganizationMembersReadState(): UseOrganizationMembersReadSta
 
     try {
       const created = await createOrganizationInvitation(accessToken, { email });
-      const reloaded = await refetchInvitations();
-      if (reloaded) {
-        setAcceptanceUrl(created.acceptanceUrl);
-      }
-      return reloaded;
+      setAcceptanceUrl(created.acceptanceUrl);
+      await refetchInvitations();
+      return true;
     } catch (error: unknown) {
       setCreateError(getOrganizationErrorMessage(error));
       return false;

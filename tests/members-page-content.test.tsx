@@ -7,6 +7,7 @@ import type { SessionContext } from "@/features/auth/types/auth";
 import type {
   OrganizationInvitation,
   OrganizationMember,
+  CreateInvitationResult,
 } from "@/features/organizations/types/organizations";
 
 import { contextFromSession, sessionWithMemberships } from "./auth-fixtures";
@@ -76,7 +77,7 @@ describe("MembersPageContent", () => {
     mocks.listOrganizationInvitations.mockReturnValueOnce(invitationsFlight.promise);
 
     await renderPage();
-    expect(document.body.textContent).toContain("Loading members...");
+    expect(document.body.textContent).toContain("Cargando miembros...");
     await act(async () => {
       membersFlight.resolve([member("member-1"), member("member-2", "SUSPENDED")]);
       invitationsFlight.resolve([invitation("invite-1")]);
@@ -86,24 +87,25 @@ describe("MembersPageContent", () => {
 
     expect(mocks.listOrganizationMembers).toHaveBeenCalledWith("access-token");
     expect(mocks.listOrganizationInvitations).toHaveBeenCalledWith("access-token");
-    expect(document.body.textContent).toContain("Members");
-    expect(document.body.textContent).toContain("Manage the people who have access to this organization.");
+    expect(document.body.textContent).toContain("Miembros");
+    expect(document.body.textContent).toContain("Administra las personas que tienen acceso a esta organización.");
     expect(document.body.textContent).toContain("Jane Doe");
     expect(document.body.textContent).toContain("jane@example.com");
     expect(document.body.textContent).toContain("OWNER");
-    expect(document.body.textContent).toContain("Active");
-    expect(document.body.textContent).toContain("Suspended");
-    expect(document.body.textContent).toContain("Pending invitations");
+    expect(document.body.textContent).toContain("Activo");
+    expect(document.body.textContent).toContain("Suspendido");
+    expect(document.body.textContent).toContain("Invitaciones pendientes");
+    expect(document.querySelector('ul[aria-label="Invitaciones pendientes"]')).not.toBeNull();
     expect(document.body.textContent).toContain("pending@example.com");
-    expect(document.body.textContent).toContain("Pending");
-    expect(document.body.textContent).toContain("Jan 10, 2026");
+    expect(document.body.textContent).toContain("Pendiente");
+    expect(document.body.textContent).toContain("10 ene de 2026");
     expect(document.body.textContent).toContain("Admin User");
     expect(document.body.textContent).toContain("Member");
-    expect(buttonNamed("Invite member")).toBeNull();
-    expect(buttonNamed("Revoke")).toBeNull();
-    expect(buttonNamed("Suspend")).toBeNull();
-    expect(buttonNamed("Reactivate")).toBeNull();
-    expect(buttonNamed("Remove")).toBeNull();
+    expect(buttonNamed("Invitar miembro")).toBeNull();
+    expect(buttonNamed("Revocar")).toBeNull();
+    expect(buttonNamed("Suspender")).toBeNull();
+    expect(buttonNamed("Reactivar")).toBeNull();
+    expect(buttonNamed("Eliminar")).toBeNull();
   });
 
   it("allows members.read without members.manage to view the page", async () => {
@@ -114,9 +116,9 @@ describe("MembersPageContent", () => {
     await renderPage();
     await flushPromises();
 
-    expect(document.body.textContent).toContain("Members");
-    expect(document.body.textContent).toContain("You're the only member of this organization.");
-    expect(document.body.textContent).not.toContain("Invite member");
+    expect(document.body.textContent).toContain("Miembros");
+    expect(document.body.textContent).toContain("Eres el único miembro de esta organización.");
+    expect(document.body.textContent).not.toContain("Invitar miembro");
   });
 
   it("does not fetch and shows a safe denied state without members.read", async () => {
@@ -127,8 +129,8 @@ describe("MembersPageContent", () => {
 
     expect(mocks.listOrganizationMembers).not.toHaveBeenCalled();
     expect(mocks.listOrganizationInvitations).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("You do not have permission to view organization members.");
-    expect(document.body.textContent).not.toContain("Pending invitations");
+    expect(document.body.textContent).toContain("No tienes permiso para ver los miembros de esta organización.");
+    expect(document.body.textContent).not.toContain("Invitaciones pendientes");
   });
 
   it("renders empty states for members and invitations", async () => {
@@ -138,8 +140,24 @@ describe("MembersPageContent", () => {
     await renderPage();
     await flushPromises();
 
-    expect(document.body.textContent).toContain("No members are available for this organization.");
-    expect(document.body.textContent).toContain("No pending invitations.");
+    expect(document.body.textContent).toContain("No hay miembros disponibles en esta organización.");
+    expect(document.body.textContent).toContain("No hay invitaciones pendientes.");
+  });
+
+  it("uses a safe inviter fallback when the backend omits a display name", async () => {
+    mocks.listOrganizationMembers.mockResolvedValueOnce([member("member-1")]);
+    mocks.listOrganizationInvitations.mockResolvedValueOnce([
+      {
+        ...invitation("invite-1"),
+        invitedBy: { id: "admin-user", displayName: null },
+      },
+    ]);
+
+    await renderPage();
+    await flushPromises();
+
+    expect(document.body.textContent).toContain("Miembro de la organización");
+    expect(document.body.textContent).not.toContain("admin@example.com");
   });
 
   it("keeps loaded members visible when invitations fail and retries that section", async () => {
@@ -153,7 +171,7 @@ describe("MembersPageContent", () => {
 
     expect(document.body.textContent).toContain("Jane Doe");
     expect(document.body.textContent).toContain("No tenés permisos para administrar miembros de esta organización.");
-    await clickButton("Retry invitations");
+    await clickButton("Reintentar carga de invitaciones");
     await flushPromises();
 
     expect(mocks.listOrganizationMembers).toHaveBeenCalledTimes(1);
@@ -186,7 +204,7 @@ describe("MembersPageContent", () => {
     await renderPage();
     await flushPromises();
 
-    expect(document.body.textContent).toContain("You're the only member of this organization.");
+    expect(document.body.textContent).toContain("Eres el único miembro de esta organización.");
     expect(document.body.textContent).not.toContain("Removed User");
     expect(document.body.textContent).not.toContain("expired@example.com");
   });
@@ -232,17 +250,17 @@ describe("MembersPageContent", () => {
     await flushPromises();
 
     const table = document.querySelector("table");
-    const mobileList = document.querySelector('ul[aria-label="Organization members"]');
-    expect(table?.textContent).toContain("Name");
-    expect(table?.textContent).toContain("Email");
-    expect(table?.textContent).toContain("Role(s)");
-    expect(table?.textContent).toContain("Status");
+    const mobileList = document.querySelector('ul[aria-label="Miembros de la organización"]');
+    expect(table?.textContent).toContain("Nombre");
+    expect(table?.textContent).toContain("Correo electrónico");
+    expect(table?.textContent).toContain("Rol(es)");
+    expect(table?.textContent).toContain("Estado");
     expect(table?.parentElement?.className).toContain("hidden md:block");
     expect(mobileList?.className).toContain("md:hidden");
     expect(mobileList?.textContent).toContain("Jane Doe");
     expect(mobileList?.textContent).toContain("jane@example.com");
     expect(mobileList?.textContent).toContain("OWNER");
-    expect(mobileList?.textContent).toContain("Active");
+    expect(mobileList?.textContent).toContain("Activo");
   });
 
   it("shows Invite member with members.manage and validates that email is the only business field", async () => {
@@ -252,15 +270,15 @@ describe("MembersPageContent", () => {
 
     await renderPage();
     await flushPromises();
-    await clickButton("Invite member");
+    await clickButton("Invitar miembro");
 
     const inputs = Array.from(document.querySelectorAll("input"));
     expect(inputs).toHaveLength(1);
     expect(inputs[0]?.getAttribute("name")).toBe("email");
-    await clickButton("Create invitation");
+    await clickButton("Crear invitación");
 
     expect(mocks.createOrganizationInvitation).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("Enter a valid email address.");
+    expect(document.body.textContent).toContain("Ingresa un correo electrónico válido.");
   });
 
   it("creates an invitation once, refetches, shows and clears the one-time acceptanceUrl", async () => {
@@ -270,31 +288,66 @@ describe("MembersPageContent", () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([invitation("invite-1")]);
     mocks.createOrganizationInvitation.mockResolvedValueOnce({
-      ...invitation("invite-1"),
+      invitation: invitation("invite-1"),
       acceptanceUrl: "/invite/secret-token",
     });
     const storageSetItem = vi.spyOn(Storage.prototype, "setItem");
 
     await renderPage();
     await flushPromises();
-    await clickButton("Invite member");
+    await clickButton("Invitar miembro");
     await setInputValue(inputNamed("email"), " Pending@Example.com ");
-    await clickButton("Create invitation");
+    await clickButton("Crear invitación");
     await flushPromises();
 
     expect(mocks.createOrganizationInvitation).toHaveBeenCalledTimes(1);
     expect(mocks.createOrganizationInvitation).toHaveBeenCalledWith("access-token", { email: "pending@example.com" });
     expect(mocks.listOrganizationInvitations).toHaveBeenCalledTimes(2);
-    expect(document.body.textContent).toContain("Invitation created.");
-    expect(document.body.textContent).toContain("Share this secure link with the invited person.");
-    expect((inputNamed("Invitation link") as HTMLInputElement).value).toBe("/invite/secret-token");
+    expect(document.body.textContent).toContain("Invitación creada");
+    expect(document.body.textContent).toContain("Comparte este enlace seguro con la persona invitada.");
+    expect((inputNamed("Enlace de invitación") as HTMLInputElement).value).toBe("/invite/secret-token");
     expect(document.body.textContent).not.toContain("Email sent successfully");
     expect(storageSetItem).not.toHaveBeenCalled();
 
-    await clickButton("Close");
+    await clickButton("Cerrar");
     expect(document.body.textContent).not.toContain("/invite/secret-token");
-    await clickButton("Invite member");
+    await clickButton("Invitar miembro");
     expect(document.body.textContent).not.toContain("/invite/secret-token");
+    storageSetItem.mockRestore();
+  });
+
+  it("keeps the one-time acceptanceUrl available when invitation reconciliation fails", async () => {
+    mocks.session = sessionContext(["members.read", "members.manage"]);
+    mocks.listOrganizationMembers.mockResolvedValueOnce([member("member-1")]);
+    mocks.listOrganizationInvitations
+      .mockResolvedValueOnce([])
+      .mockRejectedValueOnce(new Error("network failure"));
+    mocks.createOrganizationInvitation.mockResolvedValueOnce({
+      invitation: invitation("invite-1"),
+      acceptanceUrl: "/invite/one-time-token",
+    });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const storageSetItem = vi.spyOn(Storage.prototype, "setItem");
+
+    await renderPage();
+    await flushPromises();
+    await clickButton("Invitar miembro");
+    await setInputValue(inputNamed("email"), "pending@example.com");
+    await clickButton("Crear invitación");
+    await flushPromises();
+
+    expect(mocks.createOrganizationInvitation).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).toContain("Invitación creada");
+    expect((inputNamed("Enlace de invitación") as HTMLInputElement).value).toBe("/invite/one-time-token");
+    expect(document.body.textContent).toContain("No fue posible completar la solicitud. Intentá nuevamente.");
+    await clickButton("Copiar enlace de invitación");
+    await flushPromises();
+    expect(writeText).toHaveBeenCalledWith("/invite/one-time-token");
+    expect(storageSetItem).not.toHaveBeenCalled();
+
+    await clickButton("Cerrar");
+    expect(document.body.textContent).not.toContain("/invite/one-time-token");
     storageSetItem.mockRestore();
   });
 
@@ -302,33 +355,33 @@ describe("MembersPageContent", () => {
     mocks.session = sessionContext(["members.read", "members.manage"]);
     mocks.listOrganizationMembers.mockResolvedValue([member("member-1")]);
     mocks.listOrganizationInvitations.mockResolvedValue([]);
-    const createFlight = deferred<OrganizationInvitation & { acceptanceUrl: string }>();
+    const createFlight = deferred<CreateInvitationResult>();
     mocks.createOrganizationInvitation.mockReturnValueOnce(createFlight.promise);
 
     await renderPage();
     await flushPromises();
-    await clickButton("Invite member");
+    await clickButton("Invitar miembro");
     await setInputValue(inputNamed("email"), "pending@example.com");
-    await clickButton("Create invitation");
-    await clickButton("Creating invitation...");
+    await clickButton("Crear invitación");
+    await clickButton("Creando invitación...");
 
     expect(mocks.createOrganizationInvitation).toHaveBeenCalledTimes(1);
     await act(async () => {
-      createFlight.resolve({ ...invitation("invite-1"), acceptanceUrl: "/invite/token" });
+      createFlight.resolve({ invitation: invitation("invite-1"), acceptanceUrl: "/invite/token" });
       await Promise.resolve();
     });
     await flushPromises();
 
-    await clickButton("Close");
+    await clickButton("Cerrar");
     mocks.createOrganizationInvitation.mockRejectedValueOnce(new ApiError("duplicate", 409, { statusCode: 409, code: "INVITATION_ALREADY_PENDING", message: "raw" }));
-    await clickButton("Invite member");
+    await clickButton("Invitar miembro");
     await setInputValue(inputNamed("email"), "pending@example.com");
-    await clickButton("Create invitation");
+    await clickButton("Crear invitación");
     await flushPromises();
     expect(document.body.textContent).toContain("Ya existe una invitación pendiente para ese email.");
 
     mocks.createOrganizationInvitation.mockRejectedValueOnce(new ApiError("member", 409, { statusCode: 409, code: "MEMBER_ALREADY_EXISTS", message: "raw" }));
-    await clickButton("Create invitation");
+    await clickButton("Crear invitación");
     await flushPromises();
     expect(document.body.textContent).toContain("La persona ya pertenece a esta organización.");
   });
@@ -337,28 +390,28 @@ describe("MembersPageContent", () => {
     mocks.session = sessionContext(["members.read", "members.manage"]);
     mocks.listOrganizationMembers.mockResolvedValue([member("member-1")]);
     mocks.listOrganizationInvitations.mockResolvedValue([]);
-    mocks.createOrganizationInvitation.mockResolvedValue({ ...invitation("invite-1"), acceptanceUrl: "/invite/token" });
+    mocks.createOrganizationInvitation.mockResolvedValue({ invitation: invitation("invite-1"), acceptanceUrl: "/invite/token" });
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     const storageSetItem = vi.spyOn(Storage.prototype, "setItem");
 
     await renderPage();
     await flushPromises();
-    await clickButton("Invite member");
+    await clickButton("Invitar miembro");
     await setInputValue(inputNamed("email"), "pending@example.com");
-    await clickButton("Create invitation");
+    await clickButton("Crear invitación");
     await flushPromises();
-    await clickButton("Copy invitation link");
+    await clickButton("Copiar enlace de invitación");
     await flushPromises();
 
     expect(writeText).toHaveBeenCalledWith("/invite/token");
-    expect(document.body.textContent).toContain("Invitation link copied.");
+    expect(document.body.textContent).toContain("Enlace de invitación copiado.");
     expect(storageSetItem).not.toHaveBeenCalled();
 
     writeText.mockRejectedValueOnce(new Error("denied"));
-    await clickButton("Copy invitation link");
+    await clickButton("Copiar enlace de invitación");
     await flushPromises();
-    expect(document.body.textContent).toContain("We couldn't copy the link. Select and copy it manually.");
+    expect(document.body.textContent).toContain("No pudimos copiar el enlace. Selecciónalo y cópialo manualmente.");
     storageSetItem.mockRestore();
   });
 
@@ -373,15 +426,15 @@ describe("MembersPageContent", () => {
 
     await renderPage();
     await flushPromises();
-    expect(buttonNamed("Revoke")).not.toBeNull();
-    await clickButton("Revoke");
-    expect(document.body.textContent).toContain("Revoke invitation?");
-    await clickButton("Cancel");
+    expect(buttonNamed("Revocar")).not.toBeNull();
+    await clickButton("Revocar");
+    expect(document.body.textContent).toContain("¿Revocar invitación?");
+    await clickButton("Cancelar");
     expect(mocks.revokeOrganizationInvitation).not.toHaveBeenCalled();
 
-    await clickButton("Revoke");
+    await clickButton("Revocar");
     expect(document.body.textContent).toContain("pending@example.com");
-    await clickLastButton("Revoke");
+    await clickLastButton("Revocar invitación");
     await flushPromises();
     expect(mocks.revokeOrganizationInvitation).toHaveBeenCalledWith("access-token", "invite-1");
     expect(mocks.listOrganizationInvitations).toHaveBeenCalledTimes(2);
@@ -395,8 +448,8 @@ describe("MembersPageContent", () => {
     mocks.revokeOrganizationInvitation.mockRejectedValueOnce(new ApiError("gone", 404, { statusCode: 404, code: "INVITATION_NOT_FOUND", message: "raw" }));
     await renderPage();
     await flushPromises();
-    await clickButton("Revoke");
-    await clickLastButton("Revoke");
+    await clickButton("Revocar");
+    await clickLastButton("Revocar invitación");
     await flushPromises();
     expect(document.body.textContent).toContain("pending@example.com");
     expect(document.body.textContent).toContain("La invitación no existe o ya no está disponible.");
@@ -411,9 +464,9 @@ describe("MembersPageContent", () => {
 
     await renderPage();
     await flushPromises();
-    await clickButton("Revoke");
-    await clickLastButton("Revoke");
-    await clickButton("Revoking...");
+    await clickButton("Revocar");
+    await clickLastButton("Revocar invitación");
+    await clickButton("Revocando...");
 
     expect(mocks.revokeOrganizationInvitation).toHaveBeenCalledTimes(1);
   });
@@ -431,14 +484,14 @@ describe("MembersPageContent", () => {
     await flushPromises();
 
     const table = document.querySelector("table");
-    const mobileList = document.querySelector('ul[aria-label="Organization members"]');
-    expect(table?.textContent).toContain("Actions");
-    expect(table?.textContent).toContain("Suspend");
-    expect(table?.textContent).toContain("Reactivate");
-    expect(table?.textContent).toContain("Remove");
-    expect(mobileList?.textContent).toContain("Suspend");
-    expect(mobileList?.textContent).toContain("Reactivate");
-    expect(mobileList?.textContent).toContain("Remove");
+    const mobileList = document.querySelector('ul[aria-label="Miembros de la organización"]');
+    expect(table?.textContent).toContain("Acciones");
+    expect(table?.textContent).toContain("Suspender");
+    expect(table?.textContent).toContain("Reactivar");
+    expect(table?.textContent).toContain("Eliminar");
+    expect(mobileList?.textContent).toContain("Suspender");
+    expect(mobileList?.textContent).toContain("Reactivar");
+    expect(mobileList?.textContent).toContain("Eliminar");
     expect(document.body.textContent).not.toContain("Removed User");
   });
 
@@ -454,22 +507,22 @@ describe("MembersPageContent", () => {
 
     await renderPage();
     await flushPromises();
-    await clickButton("Suspend");
-    expect(document.body.textContent).toContain("Suspend member?");
-    await clickButton("Cancel");
+    await clickButton("Suspender");
+    expect(document.body.textContent).toContain("¿Suspender miembro?");
+    await clickButton("Cancelar");
     expect(mocks.suspendOrganizationMember).not.toHaveBeenCalled();
-    await clickButton("Suspend");
-    await clickButton("Suspend member");
+    await clickButton("Suspender");
+    await clickButton("Suspender miembro");
     await flushPromises();
     expect(mocks.suspendOrganizationMember).toHaveBeenCalledWith("access-token", "member-1");
     expect(mocks.listOrganizationMembers).toHaveBeenCalledTimes(2);
 
-    await clickButton("Remove");
-    expect(document.body.textContent).toContain("Remove Jane Doe from Example Org?");
-    expect(document.body.textContent).toContain("They will lose access to this organization.");
-    await clickButton("Remove member");
+    await clickButton("Eliminar");
+    expect(document.body.textContent).toContain("¿Eliminar a Jane Doe de Example Org?");
+    expect(document.body.textContent).toContain("Perderá el acceso a esta organización.");
+    await clickButton("Eliminar miembro");
     await flushPromises();
-    expect(document.body.textContent).toContain("This action can't be completed because the organization must have at least one active owner.");
+    expect(document.body.textContent).toContain("No se puede completar esta acción porque la organización debe mantener al menos un propietario activo.");
     expect(document.body.textContent).toContain("Jane Doe");
   });
 
@@ -483,7 +536,7 @@ describe("MembersPageContent", () => {
 
     await renderPage();
     await flushPromises();
-    await clickButton("Reactivate");
+    await clickButton("Reactivar");
     await flushPromises();
     expect(mocks.reactivateOrganizationMember).toHaveBeenCalledWith("access-token", "member-2");
     expect(mocks.listOrganizationMembers).toHaveBeenCalledTimes(2);
@@ -497,10 +550,10 @@ describe("MembersPageContent", () => {
     mocks.reactivateOrganizationMember.mockRejectedValueOnce(new ApiError("missing", 404, { statusCode: 404, code: "MEMBERSHIP_NOT_FOUND", message: "raw" }));
     await renderPage();
     await flushPromises();
-    await clickButton("Reactivate");
+    await clickButton("Reactivar");
     await flushPromises();
     expect(document.body.textContent).toContain("El miembro no existe o ya no está disponible.");
-    expect(document.body.textContent).toContain("Suspended");
+    expect(document.body.textContent).toContain("Suspendido");
   });
 });
 
@@ -630,6 +683,7 @@ function member(
       displayName,
       firstName: displayName.split(" ")[0] ?? null,
       lastName: displayName.split(" ")[1] ?? null,
+      avatarUrl: null,
     },
   };
 }
@@ -647,7 +701,6 @@ function invitation(
     expiresAt: "2026-01-10T00:00:00.000Z",
     invitedBy: {
       id: "admin-user",
-      email: "admin@example.com",
       displayName: "Admin User",
     },
     proposedRole: {

@@ -1,4 +1,5 @@
 import { act, useEffect, useReducer } from "react";
+import { readFileSync } from "node:fs";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -176,15 +177,22 @@ describe("OrganizationSwitcher", () => {
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
-  it("shows Members navigation only with members.read and marks pathname active", async () => {
+  it("shows the group icon and Miembros navigation only with members.read on desktop and mobile", async () => {
     mocks.pathname = "/settings/members";
     await renderWorkspace();
 
     const membersLink = document.querySelector<HTMLAnchorElement>('a[href="/settings/members"]');
     const dashboardLink = document.querySelector<HTMLAnchorElement>('a[href="/dashboard"]');
-    expect(membersLink?.textContent).toContain("Members");
+    expect(membersLink?.textContent).toContain("Miembros");
+    expect(membersLink?.textContent).not.toContain("GROUP");
     expect(membersLink?.getAttribute("aria-current")).toBe("page");
     expect(dashboardLink?.getAttribute("aria-current")).toBeNull();
+    expect(readFileSync("src/app/layout.tsx", "utf8")).toContain("folder,group,help");
+
+    await clickButton("Abrir navegación");
+    const mobileMembersLink = document.querySelector<HTMLAnchorElement>("#workspace-mobile-navigation a[href='/settings/members']");
+    expect(mobileMembersLink?.textContent).toContain("Miembros");
+    expect(mobileMembersLink?.textContent).not.toContain("GROUP");
 
     await cleanupMountedRoots();
     const session = selectedSessionWithMultipleMemberships();
@@ -196,7 +204,7 @@ describe("OrganizationSwitcher", () => {
     await renderWorkspace();
 
     expect(document.querySelector('a[href="/settings/members"]')).toBeNull();
-    expect(document.body.textContent).not.toContain("Members");
+    expect(document.body.textContent).not.toContain("Miembros");
   });
 });
 

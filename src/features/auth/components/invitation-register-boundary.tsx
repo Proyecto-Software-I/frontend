@@ -10,13 +10,13 @@ export function InvitationRegisterBoundary({ token }: Readonly<{ token: string }
   const { preview, retry, status } = useInvitationPreview(token);
 
   if (status === "loading") {
-    return <RegisterInvitationState message="Loading invitation..." />;
+    return <RegisterInvitationState message="Cargando invitación..." />;
   }
 
   if (status !== "valid" || !preview) {
     return (
       <RegisterInvitationState
-        message="This invitation is no longer valid. Ask an organization administrator for a new invitation."
+        message="Esta invitación ya no es válida. Solicita una nueva invitación a un administrador de la organización."
         onRetry={status === "error" ? retry : undefined}
       />
     );
@@ -40,7 +40,7 @@ function RegisterInvitationState({
       <Card className="w-full max-w-lg">
         <CardContent className="grid gap-4 p-6">
           <p className="text-sm" role={onRetry ? "alert" : "status"}>{message}</p>
-          {onRetry ? <Button type="button" onClick={onRetry}>Retry</Button> : null}
+          {onRetry ? <Button type="button" onClick={onRetry}>Reintentar</Button> : null}
         </CardContent>
       </Card>
     </main>

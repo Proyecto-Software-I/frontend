@@ -4,8 +4,10 @@ import type {
   CreateInvitationResult,
   InvitationPreview,
   OrganizationInvitation,
+  OrganizationInvitationsResponse,
   OrganizationInvitationStatus,
   OrganizationMember,
+  OrganizationMembersResponse,
   OrganizationMemberStatus,
   OrganizationMemberUser,
   OrganizationRoleSummary,
@@ -55,14 +57,17 @@ function isAuthUserProjection(value: unknown): value is AuthUser {
 }
 
 function isOrganizationMemberUser(value: unknown): value is OrganizationMemberUser {
-  return isAuthUserProjection(value);
+  return (
+    isRecord(value) &&
+    isNullableString(value.avatarUrl) &&
+    isAuthUserProjection(value)
+  );
 }
 
-function isInvitedBy(value: unknown): value is Pick<AuthUser, "id" | "email" | "displayName"> {
+function isInvitedBy(value: unknown): value is Pick<AuthUser, "id" | "displayName"> {
   return (
     isRecord(value) &&
     isNonEmptyString(value.id) &&
-    isNonEmptyString(value.email) &&
     isNullableString(value.displayName)
   );
 }
@@ -87,8 +92,10 @@ export function isOrganizationMember(value: unknown): value is OrganizationMembe
   );
 }
 
-export function isOrganizationMemberList(value: unknown): value is OrganizationMember[] {
-  return Array.isArray(value) && value.every(isOrganizationMember);
+export function isOrganizationMembersResponse(
+  value: unknown,
+): value is OrganizationMembersResponse {
+  return isRecord(value) && Array.isArray(value.members) && value.members.every(isOrganizationMember);
 }
 
 export function isOrganizationInvitation(value: unknown): value is OrganizationInvitation {
@@ -106,8 +113,14 @@ export function isOrganizationInvitation(value: unknown): value is OrganizationI
   );
 }
 
-export function isOrganizationInvitationList(value: unknown): value is OrganizationInvitation[] {
-  return Array.isArray(value) && value.every(isOrganizationInvitation);
+export function isOrganizationInvitationsResponse(
+  value: unknown,
+): value is OrganizationInvitationsResponse {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.invitations) &&
+    value.invitations.every(isOrganizationInvitation)
+  );
 }
 
 export function isInvitationPreview(value: unknown): value is InvitationPreview {
@@ -125,13 +138,7 @@ export function isInvitationPreview(value: unknown): value is InvitationPreview 
 export function isCreateInvitationResult(value: unknown): value is CreateInvitationResult {
   return (
     isRecord(value) &&
-    isOrganizationInvitation(withoutAcceptanceUrl(value)) &&
+    isOrganizationInvitation(value.invitation) &&
     isNonEmptyString(value.acceptanceUrl)
   );
-}
-
-function withoutAcceptanceUrl(value: Record<string, unknown>): Record<string, unknown> {
-  const invitation = { ...value };
-  delete invitation.acceptanceUrl;
-  return invitation;
 }

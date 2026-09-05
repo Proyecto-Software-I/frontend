@@ -10,7 +10,7 @@ const messages: Record<string, string> = {
   INVITATION_ALREADY_ACCEPTED: "La invitación ya fue utilizada.",
   INVITATION_EMAIL_MISMATCH: "La invitación corresponde a otra cuenta.",
   MEMBERSHIP_NOT_FOUND: "El miembro no existe o ya no está disponible.",
-  LAST_OWNER_REQUIRED: "This action can't be completed because the organization must have at least one active owner.",
+  LAST_OWNER_REQUIRED: "No se puede completar esta acción porque la organización debe mantener al menos un propietario activo.",
   MEMBER_ACCESS_DENIED: "No tenés permisos para administrar miembros de esta organización.",
 };
 

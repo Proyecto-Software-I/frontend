@@ -17,7 +17,7 @@ export function InvitationPageContent({ token }: Readonly<{ token: string }>) {
   const previewState = useInvitationPreview(token);
 
   if (previewState.status === "loading") {
-    return <InvitationShell><p role="status" aria-live="polite">Loading invitation...</p></InvitationShell>;
+    return <InvitationShell><p role="status" aria-live="polite">Cargando invitación...</p></InvitationShell>;
   }
 
   if (previewState.status !== "valid" || !previewState.preview) {
@@ -63,7 +63,7 @@ function ValidInvitation({
       );
 
       if (!membership) {
-        setError("Invitation accepted, but your organization access is still syncing. Retry setup shortly.");
+        setError("La invitación fue aceptada, pero el acceso a tu organización aún se está sincronizando. Reintenta la configuración en unos momentos.");
         return;
       }
 
@@ -80,7 +80,7 @@ function ValidInvitation({
     if (pending || accepted || acceptingRef.current) return;
     const accessToken = getAccessToken();
     if (!accessToken) {
-      setError("Your session is no longer available. Sign in again to continue.");
+      setError("Tu sesión ya no está disponible. Inicia sesión nuevamente para continuar.");
       return;
     }
 
@@ -114,34 +114,34 @@ function ValidInvitation({
   return (
     <InvitationShell>
       <div className="grid gap-2">
-        <p className="text-sm text-muted-foreground">You&apos;ve been invited to join</p>
+        <p className="text-sm text-muted-foreground">Has sido invitado a unirte a</p>
         <h1 className="text-3xl font-semibold tracking-tight">{preview.organization.name}</h1>
-        <p className="text-muted-foreground">as {preview.email}</p>
-        <p className="text-sm text-muted-foreground">Invitation expires {formatDate(preview.expiresAt)}.</p>
+        <p className="text-muted-foreground">como {preview.email}</p>
+        <p className="text-sm text-muted-foreground">La invitación vence {formatDate(preview.expiresAt)}.</p>
       </div>
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
       {!signedIn ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <Button asChild variant="outline"><Link href={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>Sign in</Link></Button>
-          <Button asChild><Link href={`/auth/register?invitationToken=${encodeURIComponent(token)}`}>Create account and join organization</Link></Button>
+          <Button asChild variant="outline"><Link href={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>Iniciar sesión</Link></Button>
+          <Button asChild><Link href={`/auth/register?invitationToken=${encodeURIComponent(token)}`}>Crear cuenta y unirme a la organización</Link></Button>
         </div>
       ) : isMatchingAccount ? (
         <div className="grid gap-3">
           {accepted ? (
             <Button type="button" disabled={pending} onClick={() => void finishOrganizationSetup()}>
-              {pending ? "Setting up organization..." : "Retry setup"}
+              {pending ? "Configurando organización..." : "Reintentar configuración"}
             </Button>
           ) : (
             <Button type="button" disabled={pending} aria-busy={pending} onClick={() => void handleJoin()}>
-              {pending ? "Joining organization..." : `Join ${preview.organization.name}`}
+              {pending ? "Uniéndose a la organización..." : `Unirme a ${preview.organization.name}`}
             </Button>
           )}
         </div>
       ) : (
         <div className="grid gap-3">
-          <p className="text-sm">This invitation was sent to {preview.email}. You are currently signed in as {session?.user.email ?? "another account"}.</p>
+          <p className="text-sm">Esta invitación fue enviada a {preview.email}. Actualmente has iniciado sesión como {session?.user.email ?? "otra cuenta"}.</p>
           <Button type="button" variant="outline" disabled={pending} onClick={() => void handleSignOut()}>
-            {pending ? "Signing out..." : "Sign out / use another account"}
+            {pending ? "Cerrando sesión..." : "Cerrar sesión / usar otra cuenta"}
           </Button>
         </div>
       )}
@@ -157,18 +157,18 @@ function InvalidInvitationState({
   status: Exclude<InvitationPreviewStatus, "loading" | "valid">;
 }>) {
   const messages: Record<typeof status, string> = {
-    "not-found": "This invitation is no longer valid.",
-    expired: "This invitation has expired.",
-    revoked: "This invitation has been revoked.",
-    accepted: "This invitation has already been accepted.",
-    error: "We couldn't load this invitation.",
+    "not-found": "Esta invitación ya no es válida.",
+    expired: "Esta invitación ha expirado.",
+    revoked: "Esta invitación ha sido revocada.",
+    accepted: "Esta invitación ya fue aceptada.",
+    error: "No pudimos cargar esta invitación.",
   };
 
   return (
     <div className="grid gap-4">
       <h1 className="text-2xl font-semibold">{messages[status]}</h1>
-      <p className="text-muted-foreground">Ask an organization administrator for a new invitation.</p>
-      {status === "error" ? <Button type="button" onClick={onRetry}>Retry</Button> : null}
+      <p className="text-muted-foreground">Solicita una nueva invitación a un administrador de la organización.</p>
+      {status === "error" ? <Button type="button" onClick={onRetry}>Reintentar</Button> : null}
     </div>
   );
 }
@@ -188,19 +188,19 @@ function normalizeEmail(value: string | undefined): string {
 }
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
+  return new Intl.DateTimeFormat("es-BO", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
 }
 
 function getInvitationActionError(error: unknown): string {
   const code = error instanceof ApiError ? error.code : null;
   const messages: Record<string, string> = {
-    INVITATION_EXPIRED: "This invitation has expired.",
-    INVITATION_REVOKED: "This invitation has been revoked.",
-    INVITATION_ALREADY_ACCEPTED: "This invitation has already been accepted.",
-    INVITATION_EMAIL_MISMATCH: "This invitation was sent to another account.",
-    MEMBER_ALREADY_EXISTS: "You already have access to this organization.",
-    MEMBER_ACCESS_DENIED: "You do not have permission to join this organization.",
+    INVITATION_EXPIRED: "Esta invitación ha expirado.",
+    INVITATION_REVOKED: "Esta invitación ha sido revocada.",
+    INVITATION_ALREADY_ACCEPTED: "Esta invitación ya fue aceptada.",
+    INVITATION_EMAIL_MISMATCH: "Esta invitación fue enviada a otra cuenta.",
+    MEMBER_ALREADY_EXISTS: "Ya tienes acceso a esta organización.",
+    MEMBER_ACCESS_DENIED: "No tienes permiso para unirte a esta organización.",
   };
 
-  return (code && messages[code]) || "We couldn't complete this invitation action. Try again.";
+  return (code && messages[code]) || "No pudimos completar esta acción de invitación. Inténtalo nuevamente.";
 }

@@ -74,7 +74,7 @@ describe("InvitationPageContent", () => {
     mocks.getInvitationPreview.mockReturnValueOnce(flight.promise);
 
     await render("token-1");
-    expect(document.body.textContent).toContain("Loading invitation...");
+    expect(document.body.textContent).toContain("Cargando invitación...");
     await act(async () => {
       flight.resolve(preview);
       await Promise.resolve();
@@ -85,25 +85,25 @@ describe("InvitationPageContent", () => {
     expect(mocks.getAccessToken).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("Trusted Organization");
     expect(document.body.textContent).toContain("member@example.com");
-    expect(document.body.textContent).toContain("Sign in");
-    expect(document.body.textContent).toContain("Create account and join organization");
-    expect(linkHref("Sign in")).toBe("/auth/login?returnTo=%2Finvite%2Ftoken-1");
-    expect(linkHref("Create account and join organization")).toBe("/auth/register?invitationToken=token-1");
+    expect(document.body.textContent).toContain("Iniciar sesión");
+    expect(document.body.textContent).toContain("Crear cuenta y unirme a la organización");
+    expect(linkHref("Iniciar sesión")).toBe("/auth/login?returnTo=%2Finvite%2Ftoken-1");
+    expect(linkHref("Crear cuenta y unirme a la organización")).toBe("/auth/register?invitationToken=token-1");
   });
 
   it.each([
-    ["INVITATION_NOT_FOUND", "This invitation is no longer valid."],
-    ["INVITATION_EXPIRED", "This invitation has expired."],
-    ["INVITATION_REVOKED", "This invitation has been revoked."],
-    ["INVITATION_ALREADY_ACCEPTED", "This invitation has already been accepted."],
+    ["INVITATION_NOT_FOUND", "Esta invitación ya no es válida."],
+    ["INVITATION_EXPIRED", "Esta invitación ha expirado."],
+    ["INVITATION_REVOKED", "Esta invitación ha sido revocada."],
+    ["INVITATION_ALREADY_ACCEPTED", "Esta invitación ya fue aceptada."],
   ])("renders safe functional preview state for %s", async (code, message) => {
     mocks.getInvitationPreview.mockRejectedValueOnce(apiError(code));
     await render("token-1");
     await flush();
 
     expect(document.body.textContent).toContain(message);
-    expect(document.body.textContent).not.toContain("Join");
-    expect(document.body.textContent).not.toContain("Create account and join organization");
+    expect(document.body.textContent).not.toContain("Unirme a");
+    expect(document.body.textContent).not.toContain("Crear cuenta y unirme a la organización");
   });
 
   it("retries unexpected preview failures and discards stale token results", async () => {
@@ -112,8 +112,8 @@ describe("InvitationPageContent", () => {
       .mockResolvedValueOnce(preview);
     await render("token-1");
     await flush();
-    expect(document.body.textContent).toContain("We couldn't load this invitation.");
-    await click("Retry");
+    expect(document.body.textContent).toContain("No pudimos cargar esta invitación.");
+    await click("Reintentar");
     await flush();
     expect(mocks.getInvitationPreview).toHaveBeenCalledTimes(2);
     expect(document.body.textContent).toContain("Trusted Organization");
@@ -151,8 +151,8 @@ describe("InvitationPageContent", () => {
 
     await render("token-1");
     await flush();
-    expect(button("Join Trusted Organization")).not.toBeNull();
-    await click("Join Trusted Organization");
+    expect(button("Unirme a Trusted Organization")).not.toBeNull();
+    await click("Unirme a Trusted Organization");
     await flush();
 
     expect(mocks.acceptInvitation).toHaveBeenCalledWith("access-token", "token-1");
@@ -170,8 +170,8 @@ describe("InvitationPageContent", () => {
     await render("token-1");
     await flush();
 
-    expect(button("Join Trusted Organization")).not.toBeNull();
-    expect(button("Sign out / use another account")).toBeNull();
+    expect(button("Unirme a Trusted Organization")).not.toBeNull();
+    expect(button("Cerrar sesión / usar otra cuenta")).toBeNull();
   });
 
   it("blocks repeated acceptance while the request is pending", async () => {
@@ -183,8 +183,8 @@ describe("InvitationPageContent", () => {
 
     await render("token-1");
     await flush();
-    const join = button("Join Trusted Organization");
-    if (!join) throw new Error("Missing Join action");
+    const join = button("Unirme a Trusted Organization");
+    if (!join) throw new Error("Missing join action");
     await act(async () => {
       join.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       join.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -207,15 +207,15 @@ describe("InvitationPageContent", () => {
 
     await render("token-1");
     await flush();
-    await click("Join Trusted Organization");
+    await click("Unirme a Trusted Organization");
     await flush();
     expect(mocks.chooseOrganization).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("Invitation accepted, but your organization access is still syncing.");
-    await click("Retry setup");
+    expect(document.body.textContent).toContain("La invitación fue aceptada, pero el acceso a tu organización aún se está sincronizando.");
+    await click("Reintentar configuración");
     await flush();
     expect(mocks.acceptInvitation).toHaveBeenCalledTimes(1);
     expect(mocks.chooseOrganization).toHaveBeenCalledWith("real-id");
-    expect(document.body.textContent).toContain("We couldn't complete this invitation action. Try again.");
+    expect(document.body.textContent).toContain("No pudimos completar esta acción de invitación. Inténtalo nuevamente.");
   });
 
   it("does not offer Join to the wrong account and signs out through Auth", async () => {
@@ -226,10 +226,10 @@ describe("InvitationPageContent", () => {
 
     await render("token-1");
     await flush();
-    expect(document.body.textContent).toContain("This invitation was sent to member@example.com.");
-    expect(document.body.textContent).toContain("You are currently signed in as other@example.com.");
-    expect(button("Join Trusted Organization")).toBeNull();
-    await click("Sign out / use another account");
+    expect(document.body.textContent).toContain("Esta invitación fue enviada a member@example.com.");
+    expect(document.body.textContent).toContain("Actualmente has iniciado sesión como other@example.com.");
+    expect(button("Unirme a Trusted Organization")).toBeNull();
+    await click("Cerrar sesión / usar otra cuenta");
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
     expect(mocks.acceptInvitation).not.toHaveBeenCalled();
   });

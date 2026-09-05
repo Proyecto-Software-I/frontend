@@ -13,7 +13,9 @@ export interface OrganizationRoleSummary {
   name?: string;
 }
 
-export type OrganizationMemberUser = AuthUser;
+export type OrganizationMemberUser = AuthUser & {
+  avatarUrl: string | null;
+};
 
 export interface OrganizationMember {
   id: string;
@@ -30,8 +32,16 @@ export interface OrganizationInvitation {
   status: OrganizationInvitationStatus;
   createdAt: string;
   expiresAt: string;
-  invitedBy: Pick<AuthUser, "id" | "email" | "displayName">;
+  invitedBy: Pick<AuthUser, "id" | "displayName">;
   proposedRole: OrganizationRoleSummary;
+}
+
+export interface OrganizationMembersResponse {
+  members: OrganizationMember[];
+}
+
+export interface OrganizationInvitationsResponse {
+  invitations: OrganizationInvitation[];
 }
 
 export interface InvitationPreview {
@@ -40,7 +50,8 @@ export interface InvitationPreview {
   expiresAt: string;
 }
 
-export interface CreateInvitationResult extends OrganizationInvitation {
+export interface CreateInvitationResult {
+  invitation: OrganizationInvitation;
   acceptanceUrl: string;
 }
 

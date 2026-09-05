@@ -73,7 +73,7 @@ describe("RegisterForm", () => {
       organizationName: "Inviting Org",
     });
 
-    expect(document.body.textContent).toContain("You've been invited to Inviting Org.");
+    expect(document.body.textContent).toContain("Has sido invitado a Inviting Org.");
     expect(input("organizationName")).toBeNull();
     expect(input("email")?.value).toBe("member@example.com");
     expect(input("email")?.readOnly).toBe(true);

@@ -41,7 +41,7 @@ export function MembersPageContent() {
         <Card className="border-background/20 bg-background/5 text-background ring-0">
           <CardContent className="p-6">
             <p className="text-sm" role="alert">
-              You do not have permission to view organization members.
+              No tienes permiso para ver los miembros de esta organización.
             </p>
           </CardContent>
         </Card>
@@ -87,13 +87,13 @@ function PageHeader({
     <section aria-labelledby="members-title" className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="grid gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-background/65">
-          Settings
+           Configuración
         </p>
         <h1 id="members-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Members
+           Miembros
         </h1>
         <p className="text-lg text-background/65">
-          Manage the people who have access to this organization.
+           Administra las personas que tienen acceso a esta organización.
         </p>
       </div>
       {canManageMembers && createInvitation ? (
@@ -124,16 +124,16 @@ function MembersSection({
     <section aria-labelledby="members-list-title" className="grid gap-3">
       <div className="flex items-center justify-between gap-3">
         <h2 id="members-list-title" className="text-2xl font-semibold">
-          Organization members
+          Miembros de la organización
         </h2>
       </div>
       <Card className="border-background/20 bg-background/5 text-background ring-0">
         <CardContent className="p-0">
           {status === "loading" || status === "idle" ? (
-            <LoadingState message="Loading members..." />
+            <LoadingState message="Cargando miembros..." />
           ) : null}
           {status === "error" ? (
-            <ErrorState message={error} onRetry={onRetry} retryLabel="Retry members" />
+            <ErrorState message={error} onRetry={onRetry} retryLabel="Reintentar carga de miembros" />
           ) : null}
           {status === "success" && members.length === 0 ? <NoMembersState /> : null}
           {status === "success" && members.length === 1 ? (
@@ -173,14 +173,14 @@ function MembersList({
     <>
       <div className="hidden md:block">
         <table className="w-full border-collapse text-left text-sm">
-          <caption className="sr-only">Organization members</caption>
+          <caption className="sr-only">Miembros de la organización</caption>
           <thead className="border-b border-background/15 text-xs uppercase tracking-[0.16em] text-background/65">
             <tr>
-              <th scope="col" className="px-4 py-3 font-medium">Name</th>
-              <th scope="col" className="px-4 py-3 font-medium">Email</th>
-              <th scope="col" className="px-4 py-3 font-medium">Role(s)</th>
-              <th scope="col" className="px-4 py-3 font-medium">Status</th>
-              {canManageMembers ? <th scope="col" className="px-4 py-3 font-medium">Actions</th> : null}
+              <th scope="col" className="px-4 py-3 font-medium">Nombre</th>
+              <th scope="col" className="px-4 py-3 font-medium">Correo electrónico</th>
+              <th scope="col" className="px-4 py-3 font-medium">Rol(es)</th>
+              <th scope="col" className="px-4 py-3 font-medium">Estado</th>
+              {canManageMembers ? <th scope="col" className="px-4 py-3 font-medium">Acciones</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-background/10">
@@ -206,22 +206,22 @@ function MembersList({
           </tbody>
         </table>
       </div>
-      <ul className="grid gap-3 p-4 md:hidden" aria-label="Organization members">
+        <ul className="grid gap-3 p-4 md:hidden" aria-label="Miembros de la organización">
         {members.map((member) => (
           <li key={member.id} className="rounded-xl border border-background/15 bg-background/5 p-4">
             <div className="grid gap-3">
               <MemberIdentity member={member} />
               <dl className="grid gap-2 text-sm">
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-[0.14em] text-background/55">Email</dt>
+                  <dt className="text-xs font-medium uppercase tracking-[0.14em] text-background/55">Correo electrónico</dt>
                   <dd className="break-words text-background/75">{member.user.email}</dd>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <dt className="text-xs font-medium uppercase tracking-[0.14em] text-background/55">Role(s)</dt>
+                  <dt className="text-xs font-medium uppercase tracking-[0.14em] text-background/55">Rol(es)</dt>
                   <dd><Roles roles={member.roles} /></dd>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <dt className="text-xs font-medium uppercase tracking-[0.14em] text-background/55">Status</dt>
+                  <dt className="text-xs font-medium uppercase tracking-[0.14em] text-background/55">Estado</dt>
                   <dd><StatusBadge status={member.status} /></dd>
                 </div>
               </dl>
@@ -258,28 +258,28 @@ function PendingInvitationsSection({
   return (
     <section aria-labelledby="pending-invitations-title" className="grid gap-3">
       <h2 id="pending-invitations-title" className="text-2xl font-semibold">
-        Pending invitations
+        Invitaciones pendientes
       </h2>
       <Card className="border-background/20 bg-background/5 text-background ring-0">
         <CardContent className="p-0">
           {status === "loading" || status === "idle" ? (
-            <LoadingState message="Loading pending invitations..." />
+            <LoadingState message="Cargando invitaciones pendientes..." />
           ) : null}
           {status === "error" ? (
-            <ErrorState message={error} onRetry={onRetry} retryLabel="Retry invitations" />
+            <ErrorState message={error} onRetry={onRetry} retryLabel="Reintentar carga de invitaciones" />
           ) : null}
           {status === "success" && invitations.length === 0 ? (
-            <p className="p-6 text-sm text-background/75">No pending invitations.</p>
+            <p className="p-6 text-sm text-background/75">No hay invitaciones pendientes.</p>
           ) : null}
           {status === "success" && invitations.length > 0 ? (
-            <ul className="divide-y divide-background/10" aria-label="Pending invitations">
+            <ul className="divide-y divide-background/10" aria-label="Invitaciones pendientes">
               {invitations.map((invitation) => (
                 <li key={invitation.id} className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <InvitationField label="Email" value={invitation.email} />
-                  <InvitationField label="Status" value={formatStatus(invitation.status)} />
-                  <InvitationField label="Expiration" value={formatDate(invitation.expiresAt)} />
-                  <InvitationField label="Invited by" value={displayInviter(invitation)} />
-                  <InvitationField label="Role" value={invitation.proposedRole.name ?? invitation.proposedRole.key} />
+                  <InvitationField label="Correo electrónico" value={invitation.email} />
+                  <InvitationField label="Estado" value={formatInvitationStatus(invitation.status)} />
+                  <InvitationField label="Vencimiento" value={formatDate(invitation.expiresAt)} />
+                  <InvitationField label="Invitado por" value={displayInviter(invitation)} />
+                  <InvitationField label="Rol" value={invitation.proposedRole.name ?? invitation.proposedRole.key} />
                   {canManageMembers ? (
                     <RevokeInvitationAction invitation={invitation} revoke={revoke} />
                   ) : null}
@@ -346,7 +346,7 @@ function InviteMemberDialog({
 
     const normalizedEmail = email.trim().toLowerCase();
     if (!isValidEmail(normalizedEmail)) {
-      setFieldError("Enter a valid email address.");
+      setFieldError("Ingresa un correo electrónico válido.");
       return;
     }
 
@@ -364,30 +364,30 @@ function InviteMemberDialog({
         throw new Error("Clipboard API unavailable.");
       }
       await navigator.clipboard.writeText(createInvitation.acceptanceUrl);
-      setCopyStatus("Invitation link copied.");
+      setCopyStatus("Enlace de invitación copiado.");
     } catch {
-      setCopyStatus("We couldn't copy the link. Select and copy it manually.");
+      setCopyStatus("No pudimos copiar el enlace. Selecciónalo y cópialo manualmente.");
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <Button type="button" onClick={() => setOpen(true)}>
-        Invite member
+        Invitar miembro
       </Button>
-      <DialogContent>
+      <DialogContent showCloseButton={false} className="max-h-[calc(100svh-2rem)] overflow-y-auto border border-background/20 bg-foreground font-sans text-background ring-background/10">
         {createInvitation.acceptanceUrl ? (
           <>
             <DialogHeader>
-              <DialogTitle>Invitation created.</DialogTitle>
-              <DialogDescription>
-                Share this secure link with the invited person.
+              <DialogTitle className="font-sans text-background">Invitación creada</DialogTitle>
+              <DialogDescription className="text-background/65">
+                Comparte este enlace seguro con la persona invitada.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-3">
               <label className="grid gap-2 text-sm font-medium">
-                Invitation link
-                <Input readOnly value={createInvitation.acceptanceUrl} />
+                Enlace de invitación
+                <Input className="border-background/20 bg-background/10 text-background" readOnly value={createInvitation.acceptanceUrl} />
               </label>
               {copyStatus ? (
                 <p className="text-sm text-background/75" role="status" aria-live="polite">
@@ -395,25 +395,25 @@ function InviteMemberDialog({
                 </p>
               ) : null}
             </div>
-            <DialogFooter>
+            <DialogFooter className="border-background/20 bg-background/5">
               <DialogClose asChild>
-                <Button type="button" variant="outline">Close</Button>
+                <Button type="button" variant="outline" className="border-background/20 bg-background/10 text-background hover:bg-background/15">Cerrar</Button>
               </DialogClose>
               <Button type="button" onClick={() => void copyInvitationLink()}>
-                Copy invitation link
+                Copiar enlace de invitación
               </Button>
             </DialogFooter>
           </>
         ) : (
           <form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
             <DialogHeader>
-              <DialogTitle>Invite member</DialogTitle>
-              <DialogDescription>
-                Create a one-time invitation link for a new organization member.
+              <DialogTitle className="font-sans text-background">Invitar miembro</DialogTitle>
+              <DialogDescription className="text-background/65">
+                Crea un enlace de invitación de un solo uso para un nuevo miembro de la organización.
               </DialogDescription>
             </DialogHeader>
             <label className="grid gap-2 text-sm font-medium" htmlFor="invite-member-email">
-              Email
+              Correo electrónico
               <Input
                 id="invite-member-email"
                 name="email"
@@ -424,6 +424,7 @@ function InviteMemberDialog({
                 aria-invalid={Boolean(fieldError)}
                 aria-describedby={fieldError ? "invite-member-email-error" : undefined}
                 disabled={createInvitation.pending}
+                className="border-background/20 bg-background/10 text-background"
               />
             </label>
             {fieldError ? (
@@ -436,12 +437,12 @@ function InviteMemberDialog({
                 {createInvitation.error}
               </p>
             ) : null}
-            <DialogFooter>
+            <DialogFooter className="border-background/20 bg-background/5">
               <DialogClose asChild>
-                <Button type="button" variant="outline" disabled={createInvitation.pending}>Cancel</Button>
+                <Button type="button" variant="outline" className="border-background/20 bg-background/10 text-background hover:bg-background/15" disabled={createInvitation.pending}>Cancelar</Button>
               </DialogClose>
               <Button type="submit" disabled={createInvitation.pending}>
-                {createInvitation.pending ? "Creating invitation..." : "Create invitation"}
+                {createInvitation.pending ? "Creando invitación..." : "Crear invitación"}
               </Button>
             </DialogFooter>
           </form>
@@ -464,18 +465,18 @@ function RevokeInvitationAction({
   return (
     <div className="self-end">
       <Button type="button" variant="destructive" onClick={() => setOpen(true)} disabled={pending}>
-        {pending ? "Revoking..." : "Revoke"}
+        {pending ? "Revocando..." : "Revocar"}
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto border border-background/20 bg-foreground font-sans text-background ring-background/10">
           <AlertDialogHeader>
-            <AlertDialogTitle>Revoke invitation?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will make the invitation for {invitation.email} unusable.
+            <AlertDialogTitle className="font-sans text-background">¿Revocar invitación?</AlertDialogTitle>
+            <AlertDialogDescription className="text-background/65">
+              La invitación para {invitation.email} dejará de ser válida.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="border-background/20 bg-background/5">
+            <AlertDialogCancel className="border-background/20 bg-background/10 text-background hover:bg-background/15" disabled={pending}>Cancelar</AlertDialogCancel>
             <Button
               type="button"
               variant="destructive"
@@ -486,7 +487,7 @@ function RevokeInvitationAction({
                 });
               }}
             >
-              {pending ? "Revoking..." : "Revoke"}
+              {pending ? "Revocando..." : "Revocar invitación"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -512,33 +513,34 @@ function MemberActions({
     <div className="flex flex-wrap gap-2">
       {member.status === "ACTIVE" ? (
         <ConfirmMemberAction
-          actionLabel="Suspend"
-          confirmLabel="Suspend member"
-          description={`${displayMemberName(member)} will lose access until reactivated.`}
+          actionLabel="Suspender"
+          confirmLabel="Suspender miembro"
+          description={`${displayMemberName(member)} perderá el acceso hasta que sea reactivado.`}
           disabled={pending}
           onConfirm={() => mutation.suspend(member.id)}
-          pendingLabel="Suspending..."
-          title="Suspend member?"
+          pendingLabel="Suspendiendo..."
+          title="¿Suspender miembro?"
         />
       ) : null}
       {member.status === "SUSPENDED" ? (
         <Button
           type="button"
           variant="secondary"
+          className="border-background/20 bg-background/10 text-background hover:bg-background/15"
           disabled={pending}
           onClick={() => void mutation.reactivate(member.id)}
         >
-          {pending ? "Reactivating..." : "Reactivate"}
+          {pending ? "Reactivando..." : "Reactivar"}
         </Button>
       ) : null}
       <ConfirmMemberAction
-        actionLabel="Remove"
-        confirmLabel="Remove member"
-        description="They will lose access to this organization."
+        actionLabel="Eliminar"
+        confirmLabel="Eliminar miembro"
+        description="Perderá el acceso a esta organización."
         disabled={pending}
         onConfirm={() => mutation.remove(member.id)}
-        pendingLabel="Removing..."
-        title={`Remove ${displayMemberName(member)} from ${activeOrganizationName ?? "this organization"}?`}
+        pendingLabel="Eliminando..."
+        title={`¿Eliminar a ${displayMemberName(member)} de ${activeOrganizationName ?? "esta organización"}?`}
         variant="destructive"
       />
     </div>
@@ -572,16 +574,17 @@ function ConfirmMemberAction({
         {disabled ? pendingLabel : actionLabel}
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto border border-background/20 bg-foreground font-sans text-background ring-background/10">
           <AlertDialogHeader>
-            <AlertDialogTitle>{title}</AlertDialogTitle>
-            <AlertDialogDescription>{description}</AlertDialogDescription>
+            <AlertDialogTitle className="font-sans text-background">{title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-background/65">{description}</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={disabled}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="border-background/20 bg-background/5">
+            <AlertDialogCancel className="border-background/20 bg-background/10 text-background hover:bg-background/15" disabled={disabled}>Cancelar</AlertDialogCancel>
             <Button
               type="button"
               variant={variant}
+              className={variant === "secondary" ? "border-background/20 bg-background/10 text-background hover:bg-background/15" : undefined}
               disabled={disabled}
               onClick={() => {
                 void onConfirm().then((success) => {
@@ -616,7 +619,7 @@ function MemberIdentity({ member }: Readonly<{ member: OrganizationMember }>) {
 
 function Roles({ roles }: Readonly<{ roles: string[] }>) {
   if (roles.length === 0) {
-    return <span className="text-background/65">No roles assigned.</span>;
+    return <span className="text-background/65">Sin roles asignados.</span>;
   }
 
   return (
@@ -635,7 +638,7 @@ function Roles({ roles }: Readonly<{ roles: string[] }>) {
 function StatusBadge({ status }: Readonly<{ status: OrganizationMember["status"] }>) {
   return (
     <Badge variant="outline" className="border-background/20 bg-background/10 text-background">
-      {formatStatus(status)}
+      {formatMemberStatus(status)}
     </Badge>
   );
 }
@@ -662,7 +665,7 @@ function ErrorState({
 }
 
 function NoMembersState() {
-  return <p className="p-6 text-sm text-background/75">No members are available for this organization.</p>;
+  return <p className="p-6 text-sm text-background/75">No hay miembros disponibles en esta organización.</p>;
 }
 
 function OnlyMemberState({ member }: Readonly<{ member: OrganizationMember }>) {
@@ -670,8 +673,8 @@ function OnlyMemberState({ member }: Readonly<{ member: OrganizationMember }>) {
     <div className="grid gap-4 p-6">
       <MemberIdentity member={member} />
       <div className="grid gap-1 text-sm text-background/75">
-        <p>You&apos;re the only member of this organization.</p>
-        <p>Invite your team when you&apos;re ready.</p>
+        <p>Eres el único miembro de esta organización.</p>
+        <p>Invita a tu equipo cuando estés listo.</p>
       </div>
     </div>
   );
@@ -695,15 +698,19 @@ function displayMemberName(member: OrganizationMember): string {
 }
 
 function displayInviter(invitation: OrganizationInvitation): string {
-  return invitation.invitedBy.displayName || invitation.invitedBy.email;
+  return invitation.invitedBy.displayName || "Miembro de la organización";
 }
 
-function formatStatus(status: string): string {
-  return status.charAt(0) + status.slice(1).toLowerCase();
+function formatMemberStatus(status: OrganizationMember["status"]): string {
+  return { ACTIVE: "Activo", SUSPENDED: "Suspendido", REMOVED: "Eliminado" }[status];
+}
+
+function formatInvitationStatus(status: OrganizationInvitation["status"]): string {
+  return { PENDING: "Pendiente", EXPIRED: "Expirada", REVOKED: "Revocada", ACCEPTED: "Aceptada" }[status];
 }
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat("es-BO", {
     dateStyle: "medium",
     timeZone: "UTC",
   }).format(new Date(value));

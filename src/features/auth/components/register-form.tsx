@@ -92,7 +92,7 @@ export function RegisterForm({
       title="Crear cuenta"
       description={
         isInvitationMode
-          ? `You've been invited to ${invitation.organizationName}.`
+          ? `Has sido invitado a ${invitation.organizationName}.`
           : "Registrá tu usuario y la primera organización."
       }
     >

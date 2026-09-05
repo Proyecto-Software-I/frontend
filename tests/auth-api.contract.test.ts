@@ -236,6 +236,38 @@ describe("authentication API contract", () => {
     expect(isSessionContext({ ...missingPermissions, auth: undefined })).toBe(false);
   });
 
+  it("rejects Auth responses that omit active membership permissions", async () => {
+    const session = sessionWithMemberships(1);
+    if (!session.activeMembership) throw new Error("Expected active membership fixture.");
+    const legacySession = {
+      ...session,
+      activeMembership: {
+        id: session.activeMembership.id,
+        status: session.activeMembership.status,
+        roles: session.activeMembership.roles,
+      },
+    };
+    fetchMock.mockResolvedValueOnce(response(200, legacySession));
+
+    await expect(login({ email: "user@example.com", password: "password" })).rejects.toThrow(
+      "respuesta de autenticación inesperada",
+    );
+
+    const malformedSession = {
+      ...sessionWithMemberships(1),
+      activeMembership: {
+        id: "membership-1",
+        status: "ACTIVE",
+        roles: [],
+        permissions: ["members.read", 1],
+      },
+    };
+    fetchMock.mockResolvedValueOnce(response(200, malformedSession));
+    await expect(login({ email: "user@example.com", password: "password" })).rejects.toThrow(
+      "respuesta de autenticación inesperada",
+    );
+  });
+
   it("treats logout 204 as success with Bearer and credentials", async () => {
     const logoutResponse = response(204, undefined, {
       "set-cookie": "legacylift_refresh=; Max-Age=0; Path=/api/auth",

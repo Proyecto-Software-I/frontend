@@ -28,8 +28,8 @@ describe("organization API contract", () => {
     vi.stubGlobal("fetch", fetchMock);
   });
 
-  it("lists members with GET, exact path, Bearer, no organizationId, and validates responses", async () => {
-    fetchMock.mockResolvedValue(response(200, [validMemberFixture]));
+  it("lists members from the backend envelope with GET, exact path, Bearer, and no organizationId", async () => {
+    fetchMock.mockResolvedValue(response(200, { members: [validMemberFixture] }));
 
     await expect(listOrganizationMembers("access-token")).resolves.toEqual([validMemberFixture]);
 
@@ -44,14 +44,18 @@ describe("organization API contract", () => {
     const request = fetchMock.mock.calls[0]?.[1];
     expect(JSON.stringify(request)).not.toContain("organizationId");
 
-    fetchMock.mockResolvedValueOnce(response(200, [{ ...validMemberFixture, user: null }]));
+    fetchMock.mockResolvedValueOnce(response(200, [validMemberFixture]));
+    await expect(listOrganizationMembers("access-token")).rejects.toThrow(
+      "respuesta de organizaciones inesperada",
+    );
+    fetchMock.mockResolvedValueOnce(response(200, { members: [{ ...validMemberFixture, user: null }] }));
     await expect(listOrganizationMembers("access-token")).rejects.toThrow(
       "respuesta de organizaciones inesperada",
     );
   });
 
-  it("lists invitations with GET, exact path, Bearer, no organizationId, and validates responses", async () => {
-    fetchMock.mockResolvedValue(response(200, [validInvitationFixture]));
+  it("lists invitations from the backend envelope with GET, exact path, Bearer, and no organizationId", async () => {
+    fetchMock.mockResolvedValue(response(200, { invitations: [validInvitationFixture] }));
 
     await expect(listOrganizationInvitations("access-token")).resolves.toEqual([validInvitationFixture]);
 
@@ -65,7 +69,11 @@ describe("organization API contract", () => {
     );
     expect(JSON.stringify(fetchMock.mock.calls[0]?.[1])).not.toContain("organizationId");
 
-    fetchMock.mockResolvedValueOnce(response(200, [{ ...validInvitationFixture, tokenHash: "secret" }]));
+    fetchMock.mockResolvedValueOnce(response(200, [validInvitationFixture]));
+    await expect(listOrganizationInvitations("access-token")).rejects.toThrow(
+      "respuesta de organizaciones inesperada",
+    );
+    fetchMock.mockResolvedValueOnce(response(200, { invitations: [{ ...validInvitationFixture, tokenHash: "secret" }] }));
     await expect(listOrganizationInvitations("access-token")).rejects.toThrow(
       "respuesta de organizaciones inesperada",
     );
@@ -73,7 +81,7 @@ describe("organization API contract", () => {
 
   it("creates invitations with the published method, path, body and response contract", async () => {
     const created = {
-      ...validInvitationFixture,
+      invitation: validInvitationFixture,
       acceptanceUrl: "/invite/token-123",
     };
     fetchMock.mockResolvedValue(response(201, created));
@@ -94,6 +102,10 @@ describe("organization API contract", () => {
     expect(JSON.stringify(fetchMock.mock.calls[0]?.[1])).not.toContain("organizationId");
 
     fetchMock.mockResolvedValueOnce(response(201, { ...created, acceptanceUrl: "" }));
+    await expect(createOrganizationInvitation("access-token", { email: "member@example.com" })).rejects.toThrow(
+      "respuesta de organizaciones inesperada",
+    );
+    fetchMock.mockResolvedValueOnce(response(201, { ...validInvitationFixture, acceptanceUrl: "/invite/token-123" }));
     await expect(createOrganizationInvitation("access-token", { email: "member@example.com" })).rejects.toThrow(
       "respuesta de organizaciones inesperada",
     );

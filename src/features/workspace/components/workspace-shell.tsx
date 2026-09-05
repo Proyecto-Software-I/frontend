@@ -233,7 +233,7 @@ function WorkspaceNavigation({
   const navigationItems = [
     { label: "Dashboard", icon: "dashboard", href: "/dashboard", enabled: true },
     ...(canReadMembers
-      ? [{ label: "Members", icon: "group", href: "/settings/members", enabled: true }]
+      ? [{ label: "Miembros", icon: "group", href: "/settings/members", enabled: true }]
       : []),
     { label: "Proyectos", icon: "folder", href: null, enabled: false },
     { label: "Sistemas", icon: "account_tree", href: null, enabled: false },

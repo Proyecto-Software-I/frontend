@@ -34,10 +34,10 @@
 ## 5. Pagina de miembros y App Shell
 
 - [x] 5.1 Agregar `/settings/members` bajo el layout del workspace mediante una pagina Server Component que componga el cliente de feature, y verificar que WorkspaceBoundary proteja la ruta y el tenant activo.
-- [x] 5.2 Actualizar la navegacion desktop y mobile para mostrar `Members` solo con `members.read` y derivar la entrada activa desde pathname; verificar Dashboard, Members y ausencia sin permiso.
+- [x] 5.2 Actualizar la navegacion desktop y mobile para mostrar `Miembros` solo con `members.read` y derivar la entrada activa desde pathname; verificar Dashboard, Miembros y ausencia sin permiso.
 - [x] 5.3 Construir el encabezado con el titulo `Miembros` y la explicacion `Gestiona las personas que tienen acceso a esta organización.`, junto con los estados de acceso, carga, error y retry usando componentes y tokens semanticos existentes; verificar el copy y que no se expongan datos cuando falta `members.read`.
 - [x] 5.4 Renderizar miembros como tabla semantica en desktop y cards/list items en mobile con initials/avatar, nombre, email, roles, estado y acciones; verificar `ACTIVE`, `SUSPENDED`, unico owner y ausencia de `REMOVED`.
-- [x] 5.5 Renderizar `Pending invitations` con email, expiracion, invitador y rol, filtrar acciones a `PENDING`, y verificar el estado `No pending invitations.`.
+- [x] 5.5 Renderizar `Invitaciones pendientes` con email, expiracion, invitador y rol, filtrar acciones a `PENDING`, y verificar el estado `No hay invitaciones pendientes.`.
 - [x] 5.6 Construir el dialog de invitacion y la confirmacion de link de un solo uso, y verificar label, error asociado, foco, Escape, pending y copy que no afirma envio de email.
 - [x] 5.7 Construir confirmaciones y feedback para revoke, suspend y remove, junto con reactivate, y verificar visibilidad exclusiva con `members.manage`, cancelacion y `LAST_OWNER_REQUIRED`.
 
@@ -46,7 +46,7 @@
 - [x] 6.1 Agregar `/invite/[token]` bajo Auth pero fuera del workspace mediante una pagina Server Component y verificar que sea accesible sin tenant activo.
 - [x] 6.2 Construir preview con carga, retry, estado valido y estados explicitos para not found, expired, revoked y accepted; verificar que estados invalidos no muestren acciones de aceptacion o registro.
 - [x] 6.3 Mostrar acciones anonimas hacia login y registro existentes conservando el token solo en URL/returnTo, y verificar que no se escriba en localStorage, sessionStorage ni cookies propias.
-- [x] 6.4 Mostrar `Join` solo para la cuenta autenticada correcta y el flujo de cambio de cuenta para email distinto; verificar que una cuenta incorrecta no pueda iniciar accept.
+- [x] 6.4 Mostrar `Unirme a <organización>` solo para la cuenta autenticada correcta y el flujo de cambio de cuenta para email distinto; verificar que una cuenta incorrecta no pueda iniciar accept.
 - [x] 6.5 Integrar el registro por invitacion y la aceptacion de usuario existente hasta `/dashboard`, y verificar ambos recorridos contra un backend compatible o mocks de contrato equivalentes.
 
 ## 7. Pruebas automatizadas
@@ -58,14 +58,14 @@
 
 ## 8. Verificacion manual
 
-- [ ] 8.1 Verificar Members e invitation preview en mobile, tablet y desktop sin scroll horizontal, incluyendo tabla/cards, menu mobile, dialogs y acciones disponibles.
-- [ ] 8.2 Verificar por teclado orden de foco, foco visible, apertura/cierre y retorno de dialogs, labels, anuncios live, disabled y confirmaciones destructivas.
-- [ ] 8.3 Verificar loading, success, empty, error, retry, clipboard failure, permisos read/manage, cambio de tenant y ausencia de optimistic updates con el backend integrado.
-- [ ] 8.4 Verificar que no existan errores de hidratacion o consola, tokens en storage/logs, mensajes de email no enviado, colores arbitrarios ni datos de otro tenant.
+- [x] 8.1 Verificar Members e invitation preview en mobile, tablet y desktop sin scroll horizontal, incluyendo tabla/cards, menu mobile, dialogs y acciones disponibles.
+- [x] 8.2 Verificar por teclado orden de foco, foco visible, apertura/cierre y retorno de dialogs, labels, anuncios live, disabled y confirmaciones destructivas.
+- [x] 8.3 Verificar loading, success, empty, error, retry, clipboard failure, permisos read/manage, cambio de tenant y ausencia de optimistic updates con el backend integrado.
+- [x] 8.4 Verificar que no existan errores de hidratacion o consola, tokens en storage/logs, mensajes de email no enviado, colores arbitrarios ni datos de otro tenant.
 
 ## 9. Validacion final
 
-- [ ] 9.1 Ejecutar `npm test -- --run` y confirmar que toda la suite pasa sin debilitar pruebas.
-- [ ] 9.2 Ejecutar `npm run lint` y corregir todos los errores dentro del alcance.
-- [ ] 9.3 Ejecutar `npm run build` y confirmar que las rutas estaticas, dinamicas y autenticadas compilan con Next.js 16.2.12.
-- [ ] 9.4 Ejecutar `npx --yes @fission-ai/openspec@latest validate 16-organization-members-ui --strict --no-interactive`, `npm run check`, `git diff --check` y `git status`, y confirmar que implementacion, specs y alcance coinciden antes de archivar.
+- [x] 9.1 Ejecutar `npm test -- --run` y confirmar que toda la suite pasa sin debilitar pruebas.
+- [x] 9.2 Ejecutar `npm run lint` y corregir todos los errores dentro del alcance.
+- [x] 9.3 Ejecutar `npm run build` y confirmar que las rutas estaticas, dinamicas y autenticadas compilan con Next.js 16.2.12.
+- [x] 9.4 Ejecutar `npx --yes @fission-ai/openspec@latest validate 16-organization-members-ui --strict --no-interactive`, `npm run check`, `git diff --check` y `git status`, y confirmar que implementacion, specs y alcance coinciden antes de archivar.

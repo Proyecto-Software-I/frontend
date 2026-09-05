@@ -28,7 +28,7 @@ La aplicacion SHALL proporcionar `/settings/members` dentro del workspace autent
 
 ### Requirement: La pagina debe consultar y representar miembros actuales
 
-La aplicacion SHALL consumir `GET /api/organizations/current/members` con Bearer para mostrar memberships `ACTIVE` y `SUSPENDED` de la organizacion activa. Cada item SHALL representar membership `id`, `status`, `joinedAt`, `jobTitle`, `roles` y los campos seguros del usuario `id`, `email`, `displayName`, `firstName`, `lastName` y `avatarUrl`. Los memberships `REMOVED` SHALL permanecer fuera de la lista normal.
+La aplicacion SHALL consumir `GET /api/organizations/current/members` con Bearer y validar el envelope `{ members: OrganizationMember[] }` antes de representar memberships `ACTIVE` y `SUSPENDED` de la organizacion activa. Cada item SHALL representar membership `id`, `status`, `joinedAt`, `jobTitle`, `roles` y los campos seguros del usuario `id`, `email`, `displayName`, `firstName`, `lastName` y `avatarUrl`. Los memberships `REMOVED` SHALL permanecer fuera de la lista normal.
 
 #### Scenario: Lista de miembros cargada
 - **GIVEN** un usuario con `members.read`
@@ -39,7 +39,7 @@ La aplicacion SHALL consumir `GET /api/organizations/current/members` con Bearer
 #### Scenario: Organizacion con solo el owner
 - **GIVEN** la respuesta contiene un unico miembro visible
 - **WHEN** la lista se renderiza
-- **THEN** la pagina informa `You're the only member of this organization. Invite your team when you're ready.`
+- **THEN** la pagina informa `Eres el único miembro de esta organización. Invita a tu equipo cuando estés listo.`
 - **AND** muestra la accion de invitar solo si el usuario tambien tiene `members.manage`
 
 #### Scenario: Carga inicial de miembros
@@ -56,7 +56,7 @@ La aplicacion SHALL consumir `GET /api/organizations/current/members` con Bearer
 
 ### Requirement: La pagina debe consultar invitaciones pendientes sin exponer secretos
 
-La aplicacion SHALL consumir `GET /api/organizations/current/invitations` con Bearer y SHALL representar en `Pending invitations` las invitaciones cuyo estado actual sea `PENDING`. Cada invitacion visible SHALL incluir email, estado, expiracion, fecha de creacion, invitador y rol propuesto. La lista SHALL no esperar ni derivar `acceptanceUrl`, token plano, `tokenHash` o IDs internos omitidos por el contrato.
+La aplicacion SHALL consumir `GET /api/organizations/current/invitations` con Bearer, validar el envelope `{ invitations: OrganizationInvitation[] }` y SHALL representar en `Invitaciones pendientes` las invitaciones cuyo estado actual sea `PENDING`. Cada invitacion visible SHALL incluir email, estado, expiracion, `invitedBy.id`, `invitedBy.displayName` y rol propuesto. `createdAt` SHALL validarse como parte del contrato de `OrganizationInvitation`, pero no se requiere mostrarlo. Si `invitedBy.displayName` es null, la UI SHALL usar un fallback seguro que no invente un email. La lista SHALL no esperar ni derivar `acceptanceUrl`, token plano, `tokenHash` o IDs internos omitidos por el contrato.
 
 #### Scenario: Existen invitaciones pendientes
 - **GIVEN** el backend devuelve una o mas invitaciones `PENDING`
@@ -67,7 +67,7 @@ La aplicacion SHALL consumir `GET /api/organizations/current/invitations` con Be
 #### Scenario: No existen invitaciones pendientes
 - **GIVEN** la respuesta no contiene invitaciones `PENDING`
 - **WHEN** la seccion se renderiza
-- **THEN** muestra `No pending invitations.`
+- **THEN** muestra `No hay invitaciones pendientes.`
 
 #### Scenario: Una invitacion expiro antes de listar
 - **GIVEN** el backend devuelve una invitacion con estado `EXPIRED`
@@ -81,12 +81,12 @@ La aplicacion SHALL consumir `GET /api/organizations/current/invitations` con Be
 
 ### Requirement: Usuarios con members.manage pueden crear invitaciones
 
-La aplicacion SHALL mostrar `Invite member` solo cuando `activeMembership.permissions` incluya `members.manage`. El formulario SHALL solicitar unicamente email y SHALL enviar `POST /api/organizations/current/invitations` con `{ email }`. La confirmacion SHALL comunicar que la invitacion fue creada, no que se envio un email.
+La aplicacion SHALL mostrar `Invitar miembro` solo cuando `activeMembership.permissions` incluya `members.manage`. El formulario SHALL solicitar unicamente email y SHALL enviar `POST /api/organizations/current/invitations` con `{ email }`. La respuesta exitosa SHALL validarse como `{ invitation: OrganizationInvitation, acceptanceUrl: string }`. La confirmacion SHALL comunicar que la invitacion fue creada, no que se envio un email.
 
 #### Scenario: Usuario autorizado abre el formulario
 - **GIVEN** un usuario con `members.manage`
-- **WHEN** activa `Invite member`
-- **THEN** se abre un dialog accesible con un campo email y `Create invitation`
+- **WHEN** activa `Invitar miembro`
+- **THEN** se abre un dialog accesible con un campo email y `Crear invitación`
 - **AND** no se muestra un selector de roles
 
 #### Scenario: Email vacio o invalido
@@ -98,14 +98,14 @@ La aplicacion SHALL mostrar `Invite member` solo cuando `activeMembership.permis
 #### Scenario: Invitacion creada
 - **GIVEN** un email valido sin membership ni invitacion pendiente
 - **WHEN** el backend responde `201` con metadata y `acceptanceUrl`
-- **THEN** la UI muestra `Invitation created. Share this secure link with the invited person.`
+- **THEN** la UI muestra `Invitación creada. Comparte este enlace seguro con la persona invitada.`
 - **AND** permite copiar el link
 - **AND** actualiza la lista confirmada por backend
-- **AND** no muestra `Email sent successfully`
+- **AND** no afirma que se envió un email
 
 #### Scenario: Link copiado
 - **GIVEN** la confirmacion conserva el `acceptanceUrl` de la respuesta de creacion
-- **WHEN** el usuario activa `Copy invitation link` y el navegador confirma la copia
+- **WHEN** el usuario activa `Copiar enlace de invitación` y el navegador confirma la copia
 - **THEN** la UI anuncia que el link fue copiado
 
 #### Scenario: Falla la copia del link
@@ -151,21 +151,21 @@ La aplicacion SHALL ofrecer revocacion solo para invitaciones `PENDING` cuando e
 
 ### Requirement: Usuarios con members.manage pueden administrar estados de membership
 
-La aplicacion SHALL ofrecer `Suspend` para memberships `ACTIVE`, `Reactivate` para memberships `SUSPENDED` y `Remove` para memberships `ACTIVE` o `SUSPENDED`, unicamente cuando el usuario tenga `members.manage`. Suspend y reactivate SHALL usar `PATCH /api/organizations/current/members/:membershipId` con `status` `SUSPENDED` o `ACTIVE`; remove SHALL usar `DELETE /api/organizations/current/members/:membershipId`.
+La aplicacion SHALL ofrecer `Suspender` para memberships `ACTIVE`, `Reactivar` para memberships `SUSPENDED` y `Eliminar` para memberships `ACTIVE` o `SUSPENDED`, unicamente cuando el usuario tenga `members.manage`. Suspend y reactivate SHALL usar `PATCH /api/organizations/current/members/:membershipId` con `status` `SUSPENDED` o `ACTIVE`; remove SHALL usar `DELETE /api/organizations/current/members/:membershipId`.
 
 #### Scenario: Suspender miembro activo
 - **GIVEN** un miembro `ACTIVE` y un administrador con `members.manage`
-- **WHEN** confirma `Suspend member` y backend confirma la transicion
+- **WHEN** confirma `Suspender miembro` y backend confirma la transicion
 - **THEN** la UI vuelve a cargar datos confirmados y muestra el miembro como `SUSPENDED`
 
 #### Scenario: Reactivar miembro suspendido
 - **GIVEN** un miembro `SUSPENDED` y un administrador con `members.manage`
-- **WHEN** activa `Reactivate member` y backend confirma la transicion
+- **WHEN** activa `Reactivar` y backend confirma la transicion
 - **THEN** la UI vuelve a cargar datos confirmados y muestra el miembro como `ACTIVE`
 
 #### Scenario: Remover miembro
 - **GIVEN** un miembro `ACTIVE` o `SUSPENDED`
-- **WHEN** el administrador confirma `Remove member` despues de ver el nombre y la organizacion afectados
+- **WHEN** el administrador confirma `Eliminar miembro` despues de ver el nombre y la organizacion afectados
 - **THEN** la UI ejecuta la eliminacion logica mediante backend
 - **AND** tras la confirmacion autoritativa el miembro deja de aparecer en la lista normal
 
@@ -194,7 +194,7 @@ La aplicacion SHALL proporcionar `/invite/[token]` sin exigir un tenant activo y
 #### Scenario: Preview valido
 - **GIVEN** un token `PENDING` y no expirado
 - **WHEN** backend responde `200`
-- **THEN** la pagina muestra `You've been invited to join`, el nombre de la organizacion y el email invitado
+- **THEN** la pagina muestra `Has sido invitado a unirte a`, el nombre de la organizacion y el email invitado
 
 #### Scenario: Preview en carga
 - **GIVEN** la consulta publica no ha terminado
@@ -219,7 +219,7 @@ Una sesion autenticada cuyo email normalizado coincide con la invitacion SHALL p
 
 #### Scenario: Usuario correcto acepta y entra a la organizacion
 - **GIVEN** el usuario autenticado tiene el mismo email normalizado que la invitacion valida
-- **WHEN** activa `Join` y backend confirma la aceptacion
+- **WHEN** activa `Unirme a <organización>` y backend confirma la aceptacion
 - **THEN** la aplicacion refresca el contexto Auth
 - **AND** selecciona la nueva organizacion mediante el flujo Auth existente
 - **AND** navega a `/dashboard` con la nueva organizacion activa
@@ -248,13 +248,13 @@ Para una invitacion valida sin sesion autenticada, la pagina SHALL ofrecer inici
 
 #### Scenario: Usuario existente inicia sesion
 - **GIVEN** una persona anonima abre una invitacion valida
-- **WHEN** elige `Already have an account`
+- **WHEN** elige `Iniciar sesión`
 - **THEN** navega al login existente con retorno restringido a `/invite/[token]`
 - **AND** despues de autenticarse vuelve a la invitacion para decidir la aceptacion
 
 #### Scenario: Usuario nuevo inicia registro por invitacion
 - **GIVEN** una persona anonima abre una invitacion valida
-- **WHEN** elige `Create account`
+- **WHEN** elige `Crear cuenta y unirme a la organización`
 - **THEN** navega al registro existente en modo invitacion conservando el token en URL
 - **AND** el registro muestra organizacion invitante, email no editable, nombre, apellido y password
 - **AND** no solicita `organizationName`

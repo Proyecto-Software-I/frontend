@@ -3,8 +3,8 @@ import { apiRequest } from "@/lib/api/api-client";
 import {
   isCreateInvitationResult,
   isInvitationPreview,
-  isOrganizationInvitationList,
-  isOrganizationMemberList,
+  isOrganizationInvitationsResponse,
+  isOrganizationMembersResponse,
 } from "../lib/validators";
 import type {
   CreateInvitationInput,
@@ -36,7 +36,7 @@ export async function listOrganizationMembers(
     cache: "no-store",
   });
 
-  return requireResponse(response, isOrganizationMemberList);
+  return requireResponse(response, isOrganizationMembersResponse).members;
 }
 
 export async function listOrganizationInvitations(
@@ -49,7 +49,7 @@ export async function listOrganizationInvitations(
     cache: "no-store",
   });
 
-  return requireResponse(response, isOrganizationInvitationList);
+  return requireResponse(response, isOrganizationInvitationsResponse).invitations;
 }
 
 export async function createOrganizationInvitation(

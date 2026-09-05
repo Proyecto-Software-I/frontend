@@ -58,7 +58,7 @@ describe("InvitationRegisterBoundary", () => {
     await flush();
 
     expect(mocks.getInvitationPreview).toHaveBeenCalledWith("invite-token");
-    expect(document.body.textContent).toContain("You've been invited to Trusted Organization.");
+    expect(document.body.textContent).toContain("Has sido invitado a Trusted Organization.");
     expect(input("email")?.value).toBe("trusted@example.com");
     expect(input("email")?.readOnly).toBe(true);
     expect(input("organizationName")).toBeNull();
