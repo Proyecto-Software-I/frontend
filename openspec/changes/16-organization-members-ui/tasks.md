@@ -26,9 +26,9 @@
 ## 4. Estado de miembros e invitaciones
 
 - [x] 4.1 Implementar el estado de lectura de miembros e invitaciones con carga independiente, retry y descarte de resultados obsoletos al cambiar tenant; verificar loading, exito, vacio, error parcial y cambio de organizacion.
-- [ ] 4.2 Implementar creacion de invitacion sin optimistic update, refetch confirmado y almacenamiento temporal de `acceptanceUrl`; verificar que cerrar la confirmacion elimina el link en memoria.
-- [ ] 4.3 Implementar copia al portapapeles con feedback de exito y fallo, y verificar ambos resultados sin persistir el link.
-- [ ] 4.4 Implementar revocacion, suspend, reactivate y remove con pending por recurso, confirmacion y reconciliacion posterior; verificar que un fallo conserva el ultimo estado confirmado.
+- [x] 4.2 Implementar creacion de invitacion sin optimistic update, refetch confirmado y almacenamiento temporal de `acceptanceUrl`; verificar que cerrar la confirmacion elimina el link en memoria.
+- [x] 4.3 Implementar copia al portapapeles con feedback de exito y fallo, y verificar ambos resultados sin persistir el link.
+- [x] 4.4 Implementar revocacion, suspend, reactivate y remove con pending por recurso, confirmacion y reconciliacion posterior; verificar que un fallo conserva el ultimo estado confirmado.
 - [ ] 4.5 Implementar la secuencia accept -> reload `/me` -> resolver membership por slug -> select organization -> dashboard, y verificar exito, membership ausente, error de aceptacion y error de seleccion.
 
 ## 5. Pagina de miembros y App Shell
@@ -38,8 +38,8 @@
 - [x] 5.3 Construir el encabezado con el titulo `Miembros` y la explicacion `Gestiona las personas que tienen acceso a esta organización.`, junto con los estados de acceso, carga, error y retry usando componentes y tokens semanticos existentes; verificar el copy y que no se expongan datos cuando falta `members.read`.
 - [x] 5.4 Renderizar miembros como tabla semantica en desktop y cards/list items en mobile con initials/avatar, nombre, email, roles, estado y acciones; verificar `ACTIVE`, `SUSPENDED`, unico owner y ausencia de `REMOVED`.
 - [x] 5.5 Renderizar `Pending invitations` con email, expiracion, invitador y rol, filtrar acciones a `PENDING`, y verificar el estado `No pending invitations.`.
-- [ ] 5.6 Construir el dialog de invitacion y la confirmacion de link de un solo uso, y verificar label, error asociado, foco, Escape, pending y copy que no afirma envio de email.
-- [ ] 5.7 Construir confirmaciones y feedback para revoke, suspend y remove, junto con reactivate, y verificar visibilidad exclusiva con `members.manage`, cancelacion y `LAST_OWNER_REQUIRED`.
+- [x] 5.6 Construir el dialog de invitacion y la confirmacion de link de un solo uso, y verificar label, error asociado, foco, Escape, pending y copy que no afirma envio de email.
+- [x] 5.7 Construir confirmaciones y feedback para revoke, suspend y remove, junto con reactivate, y verificar visibilidad exclusiva con `members.manage`, cancelacion y `LAST_OWNER_REQUIRED`.
 
 ## 6. Pagina publica de invitacion
 

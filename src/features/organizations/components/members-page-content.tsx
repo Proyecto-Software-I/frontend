@@ -1,11 +1,32 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
+
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 import { useOrganizationMembersReadState } from "../hooks/use-organization-members-read-state";
 import type { OrganizationInvitation, OrganizationMember } from "../types/organizations";
@@ -30,46 +51,71 @@ export function MembersPageContent() {
 
   return (
     <div className="grid gap-6">
-      <PageHeader />
+      <PageHeader
+        canManageMembers={state.canManageMembers}
+        createInvitation={state.createInvitation}
+      />
       <MembersSection
+        activeOrganizationName={state.activeOrganizationName}
+        canManageMembers={state.canManageMembers}
         error={state.members.error}
+        mutation={state.memberMutation}
         members={state.visibleMembers}
         onRetry={state.retryMembers}
         status={state.members.status}
       />
       <PendingInvitationsSection
+        canManageMembers={state.canManageMembers}
         error={state.invitations.error}
         invitations={state.pendingInvitations}
         onRetry={state.retryInvitations}
+        revoke={state.revokeInvitation}
         status={state.invitations.status}
       />
     </div>
   );
 }
 
-function PageHeader() {
+function PageHeader({
+  canManageMembers = false,
+  createInvitation,
+}: Readonly<{
+  canManageMembers?: boolean;
+  createInvitation?: CreateInvitationState;
+}>) {
   return (
-    <section aria-labelledby="members-title" className="grid gap-2">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-background/65">
-        Settings
-      </p>
-      <h1 id="members-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        Members
-      </h1>
-      <p className="text-lg text-background/65">
-        Manage the people who have access to this organization.
-      </p>
+    <section aria-labelledby="members-title" className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="grid gap-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-background/65">
+          Settings
+        </p>
+        <h1 id="members-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          Members
+        </h1>
+        <p className="text-lg text-background/65">
+          Manage the people who have access to this organization.
+        </p>
+      </div>
+      {canManageMembers && createInvitation ? (
+        <InviteMemberDialog createInvitation={createInvitation} />
+      ) : null}
     </section>
   );
 }
 
 function MembersSection({
+  activeOrganizationName,
+  canManageMembers,
   error,
+  mutation,
   members,
   onRetry,
   status,
 }: Readonly<{
+  activeOrganizationName: string | null;
+  canManageMembers: boolean;
   error: string | null;
+  mutation: MemberMutationState;
   members: OrganizationMember[];
   onRetry: () => void;
   status: "idle" | "loading" | "success" | "error";
@@ -93,18 +139,36 @@ function MembersSection({
           {status === "success" && members.length === 1 ? (
             <OnlyMemberState member={members[0]} />
           ) : null}
-          {status === "success" && members.length > 1 ? (
-            <MembersList members={members} />
+          {status === "success" && members.length > 0 ? (
+            <MembersList
+              activeOrganizationName={activeOrganizationName}
+              canManageMembers={canManageMembers}
+              members={members}
+              mutation={mutation}
+            />
           ) : null}
         </CardContent>
       </Card>
+      {mutation.error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {mutation.error}
+        </p>
+      ) : null}
     </section>
   );
 }
 
 function MembersList({
+  activeOrganizationName,
+  canManageMembers,
   members,
-}: Readonly<{ members: OrganizationMember[] }>) {
+  mutation,
+}: Readonly<{
+  activeOrganizationName: string | null;
+  canManageMembers: boolean;
+  members: OrganizationMember[];
+  mutation: MemberMutationState;
+}>) {
   return (
     <>
       <div className="hidden md:block">
@@ -116,6 +180,7 @@ function MembersList({
               <th scope="col" className="px-4 py-3 font-medium">Email</th>
               <th scope="col" className="px-4 py-3 font-medium">Role(s)</th>
               <th scope="col" className="px-4 py-3 font-medium">Status</th>
+              {canManageMembers ? <th scope="col" className="px-4 py-3 font-medium">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-background/10">
@@ -127,6 +192,15 @@ function MembersList({
                 <td className="px-4 py-4 text-background/75">{member.user.email}</td>
                 <td className="px-4 py-4"><Roles roles={member.roles} /></td>
                 <td className="px-4 py-4"><StatusBadge status={member.status} /></td>
+                {canManageMembers ? (
+                  <td className="px-4 py-4">
+                    <MemberActions
+                      activeOrganizationName={activeOrganizationName}
+                      member={member}
+                      mutation={mutation}
+                    />
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
@@ -151,6 +225,13 @@ function MembersList({
                   <dd><StatusBadge status={member.status} /></dd>
                 </div>
               </dl>
+              {canManageMembers ? (
+                <MemberActions
+                  activeOrganizationName={activeOrganizationName}
+                  member={member}
+                  mutation={mutation}
+                />
+              ) : null}
             </div>
           </li>
         ))}
@@ -160,14 +241,18 @@ function MembersList({
 }
 
 function PendingInvitationsSection({
+  canManageMembers,
   error,
   invitations,
   onRetry,
+  revoke,
   status,
 }: Readonly<{
+  canManageMembers: boolean;
   error: string | null;
   invitations: OrganizationInvitation[];
   onRetry: () => void;
+  revoke: RevokeInvitationState;
   status: "idle" | "loading" | "success" | "error";
 }>) {
   return (
@@ -195,13 +280,321 @@ function PendingInvitationsSection({
                   <InvitationField label="Expiration" value={formatDate(invitation.expiresAt)} />
                   <InvitationField label="Invited by" value={displayInviter(invitation)} />
                   <InvitationField label="Role" value={invitation.proposedRole.name ?? invitation.proposedRole.key} />
+                  {canManageMembers ? (
+                    <RevokeInvitationAction invitation={invitation} revoke={revoke} />
+                  ) : null}
                 </li>
               ))}
             </ul>
           ) : null}
         </CardContent>
       </Card>
+      {revoke.error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {revoke.error}
+        </p>
+      ) : null}
     </section>
+  );
+}
+
+interface CreateInvitationState {
+  pending: boolean;
+  error: string | null;
+  acceptanceUrl: string | null;
+  submit: (email: string) => Promise<boolean>;
+  clear: () => void;
+}
+
+interface RevokeInvitationState {
+  pendingId: string | null;
+  error: string | null;
+  submit: (invitationId: string) => Promise<boolean>;
+  clearError: () => void;
+}
+
+interface MemberMutationState {
+  pendingId: string | null;
+  error: string | null;
+  suspend: (membershipId: string) => Promise<boolean>;
+  reactivate: (membershipId: string) => Promise<boolean>;
+  remove: (membershipId: string) => Promise<boolean>;
+  clearError: () => void;
+}
+
+function InviteMemberDialog({
+  createInvitation,
+}: Readonly<{ createInvitation: CreateInvitationState }>) {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      setEmail("");
+      setFieldError(null);
+      setCopyStatus(null);
+      createInvitation.clear();
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (createInvitation.pending) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!isValidEmail(normalizedEmail)) {
+      setFieldError("Enter a valid email address.");
+      return;
+    }
+
+    setFieldError(null);
+    setCopyStatus(null);
+    const created = await createInvitation.submit(normalizedEmail);
+    if (created) setEmail("");
+  }
+
+  async function copyInvitationLink() {
+    if (!createInvitation.acceptanceUrl) return;
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API unavailable.");
+      }
+      await navigator.clipboard.writeText(createInvitation.acceptanceUrl);
+      setCopyStatus("Invitation link copied.");
+    } catch {
+      setCopyStatus("We couldn't copy the link. Select and copy it manually.");
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Button type="button" onClick={() => setOpen(true)}>
+        Invite member
+      </Button>
+      <DialogContent>
+        {createInvitation.acceptanceUrl ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Invitation created.</DialogTitle>
+              <DialogDescription>
+                Share this secure link with the invited person.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-3">
+              <label className="grid gap-2 text-sm font-medium">
+                Invitation link
+                <Input readOnly value={createInvitation.acceptanceUrl} />
+              </label>
+              {copyStatus ? (
+                <p className="text-sm text-background/75" role="status" aria-live="polite">
+                  {copyStatus}
+                </p>
+              ) : null}
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Close</Button>
+              </DialogClose>
+              <Button type="button" onClick={() => void copyInvitationLink()}>
+                Copy invitation link
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
+            <DialogHeader>
+              <DialogTitle>Invite member</DialogTitle>
+              <DialogDescription>
+                Create a one-time invitation link for a new organization member.
+              </DialogDescription>
+            </DialogHeader>
+            <label className="grid gap-2 text-sm font-medium" htmlFor="invite-member-email">
+              Email
+              <Input
+                id="invite-member-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(fieldError)}
+                aria-describedby={fieldError ? "invite-member-email-error" : undefined}
+                disabled={createInvitation.pending}
+              />
+            </label>
+            {fieldError ? (
+              <p id="invite-member-email-error" className="text-sm text-destructive" role="alert">
+                {fieldError}
+              </p>
+            ) : null}
+            {createInvitation.error ? (
+              <p className="text-sm text-destructive" role="alert">
+                {createInvitation.error}
+              </p>
+            ) : null}
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={createInvitation.pending}>Cancel</Button>
+              </DialogClose>
+              <Button type="submit" disabled={createInvitation.pending}>
+                {createInvitation.pending ? "Creating invitation..." : "Create invitation"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RevokeInvitationAction({
+  invitation,
+  revoke,
+}: Readonly<{
+  invitation: OrganizationInvitation;
+  revoke: RevokeInvitationState;
+}>) {
+  const [open, setOpen] = useState(false);
+  const pending = revoke.pendingId === invitation.id;
+
+  return (
+    <div className="self-end">
+      <Button type="button" variant="destructive" onClick={() => setOpen(true)} disabled={pending}>
+        {pending ? "Revoking..." : "Revoke"}
+      </Button>
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke invitation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will make the invitation for {invitation.email} unusable.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending}
+              onClick={() => {
+                void revoke.submit(invitation.id).then((success) => {
+                  if (success) setOpen(false);
+                });
+              }}
+            >
+              {pending ? "Revoking..." : "Revoke"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function MemberActions({
+  activeOrganizationName,
+  member,
+  mutation,
+}: Readonly<{
+  activeOrganizationName: string | null;
+  member: OrganizationMember;
+  mutation: MemberMutationState;
+}>) {
+  const pending = mutation.pendingId === member.id;
+
+  if (member.status === "REMOVED") return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {member.status === "ACTIVE" ? (
+        <ConfirmMemberAction
+          actionLabel="Suspend"
+          confirmLabel="Suspend member"
+          description={`${displayMemberName(member)} will lose access until reactivated.`}
+          disabled={pending}
+          onConfirm={() => mutation.suspend(member.id)}
+          pendingLabel="Suspending..."
+          title="Suspend member?"
+        />
+      ) : null}
+      {member.status === "SUSPENDED" ? (
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={pending}
+          onClick={() => void mutation.reactivate(member.id)}
+        >
+          {pending ? "Reactivating..." : "Reactivate"}
+        </Button>
+      ) : null}
+      <ConfirmMemberAction
+        actionLabel="Remove"
+        confirmLabel="Remove member"
+        description="They will lose access to this organization."
+        disabled={pending}
+        onConfirm={() => mutation.remove(member.id)}
+        pendingLabel="Removing..."
+        title={`Remove ${displayMemberName(member)} from ${activeOrganizationName ?? "this organization"}?`}
+        variant="destructive"
+      />
+    </div>
+  );
+}
+
+function ConfirmMemberAction({
+  actionLabel,
+  confirmLabel,
+  description,
+  disabled,
+  onConfirm,
+  pendingLabel,
+  title,
+  variant = "secondary",
+}: Readonly<{
+  actionLabel: string;
+  confirmLabel: string;
+  description: string;
+  disabled: boolean;
+  onConfirm: () => Promise<boolean>;
+  pendingLabel: string;
+  title: string;
+  variant?: "secondary" | "destructive";
+}>) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button type="button" variant={variant} disabled={disabled} onClick={() => setOpen(true)}>
+        {disabled ? pendingLabel : actionLabel}
+      </Button>
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={disabled}>Cancel</AlertDialogCancel>
+            <Button
+              type="button"
+              variant={variant}
+              disabled={disabled}
+              onClick={() => {
+                void onConfirm().then((success) => {
+                  if (success) setOpen(false);
+                });
+              }}
+            >
+              {disabled ? pendingLabel : confirmLabel}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -314,6 +707,10 @@ function formatDate(value: string): string {
     dateStyle: "medium",
     timeZone: "UTC",
   }).format(new Date(value));
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function getInitials(value: string): string {
