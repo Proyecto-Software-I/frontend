@@ -14,6 +14,7 @@ import type {
 } from "../types/organizations";
 
 const memberStatuses = new Set<OrganizationMemberStatus>([
+  "INVITED",
   "ACTIVE",
   "SUSPENDED",
   "REMOVED",
@@ -41,6 +42,10 @@ function isValidDateString(value: unknown): value is string {
   return isNonEmptyString(value) && Number.isFinite(Date.parse(value));
 }
 
+function isNullableDateString(value: unknown): value is string | null {
+  return value === null || isValidDateString(value);
+}
+
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
@@ -64,19 +69,23 @@ function isOrganizationMemberUser(value: unknown): value is OrganizationMemberUs
   );
 }
 
-function isInvitedBy(value: unknown): value is Pick<AuthUser, "id" | "displayName"> {
+function isInvitedBy(
+  value: unknown,
+): value is Pick<AuthUser, "id" | "displayName"> | null {
   return (
-    isRecord(value) &&
-    isNonEmptyString(value.id) &&
-    isNullableString(value.displayName)
+    value === null ||
+    (isRecord(value) &&
+      isNonEmptyString(value.id) &&
+      isNullableString(value.displayName))
   );
 }
 
-function isRoleSummary(value: unknown): value is OrganizationRoleSummary {
+function isRoleSummary(value: unknown): value is OrganizationRoleSummary | null {
   return (
-    isRecord(value) &&
-    isNonEmptyString(value.key) &&
-    (!("name" in value) || isNonEmptyString(value.name))
+    value === null ||
+    (isRecord(value) &&
+      isNonEmptyString(value.key) &&
+      (!("name" in value) || isNonEmptyString(value.name)))
   );
 }
 
@@ -85,7 +94,7 @@ export function isOrganizationMember(value: unknown): value is OrganizationMembe
     isRecord(value) &&
     isNonEmptyString(value.id) &&
     memberStatuses.has(value.status as OrganizationMemberStatus) &&
-    isValidDateString(value.joinedAt) &&
+    isNullableDateString(value.joinedAt) &&
     isNullableString(value.jobTitle) &&
     isStringArray(value.roles) &&
     isOrganizationMemberUser(value.user)
