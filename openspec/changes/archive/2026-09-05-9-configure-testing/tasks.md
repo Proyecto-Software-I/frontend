@@ -27,4 +27,4 @@
 - [x] 5.1 Update README with only `npm test` and `npm run test:watch`, and remove the outdated claim that no automated suite exists.
 - [x] 5.2 Run `npm test`, `npm run lint`, `npm run build`, `npm run check`, and `openspec validate 9-configure-testing --strict --no-interactive`; verify all pass and the check command includes tests exactly once.
 - [x] 5.3 Manually verify Landing and Auth test coverage remains responsive and keyboard-oriented where the existing components expose those behaviors, without adding E2E tooling.
-- [ ] 5.4 Archive the completed OpenSpec change only after all tasks and validations pass, then verify `openspec/specs/frontend-testing/spec.md` is current and `openspec validate --all --strict --no-interactive` passes.
+- [x] 5.4 Archive the completed OpenSpec change only after all tasks and validations pass, then verify `openspec/specs/frontend-testing/spec.md` is current and `openspec validate --all --strict --no-interactive` passes.
