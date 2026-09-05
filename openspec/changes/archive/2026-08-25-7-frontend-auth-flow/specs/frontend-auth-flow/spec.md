@@ -17,7 +17,7 @@ The application MUST use the following methods, paths, credentials, statuses, re
 
 The refresh cookie MUST be named `legacylift_refresh`, `HttpOnly`, `SameSite=Lax`, `Secure` only in production, and `Path=/api/auth`. Requests needing it MUST use `credentials: include`.
 
-The current backend has a contract discrepancy: refresh without a `legacylift_refresh` cookie returns `SESSION_REVOKED` instead of the anonymous `UNAUTHORIZED` distinction. On `/auth/login` and `/auth/register`, the frontend treats a failed initial refresh as anonymous without showing a session notice; on protected routes, it preserves returned `SESSION_EXPIRED` or `SESSION_REVOKED` feedback. This is a route-aware frontend mitigation and remains a backend discrepancy for contract-level coordination; it is not changed by this frontend update.
+The contractual code for an expired session is `SESSION_EXPIRED`; `SESSION_REVOKED` contractually denotes a revoked session. Due to a known backend implementation deviation, the frontend also defensively supports `SESSION_REVOKED` when it is returned for an expired refresh. On `/auth/login` and `/auth/register`, the frontend treats a failed initial refresh as anonymous without showing a session notice; on protected routes, it preserves returned `SESSION_EXPIRED` or `SESSION_REVOKED` feedback. This defensive handling does not make `SESSION_REVOKED` a valid contractual code for expiration.
 
 #### Scenario: Registration establishes one organization
 
@@ -77,7 +77,7 @@ Bootstrap MUST perform one bounded, single-flight `POST /api/auth/refresh` follo
 
 - **GIVEN** bootstrap returns an observable expired/revoked session error
 - **WHEN** the bounded attempt ends
-- **THEN** memory auth is cleared, login is shown with safe session feedback, and the response is handled as `SESSION_EXPIRED` or `SESSION_REVOKED` as returned; `SESSION_REVOKED` is allowed for an expired refresh in the current backend
+- **THEN** memory auth is cleared and login is shown with safe session feedback; the contractual expired-session code is `SESSION_EXPIRED`, while the frontend defensively handles `SESSION_REVOKED` if the current backend incorrectly returns it for an expired refresh
 
 #### Scenario: Public initial refresh stays anonymous
 
@@ -116,8 +116,8 @@ The frontend MUST preserve the backend error envelope `{ statusCode, code, messa
 | `401 INVALID_CREDENTIALS` | Login feedback; do not distinguish unknown email from wrong password |
 | `401 USER_NOT_ACTIVE` | Safe inactive-user feedback |
 | `401 NO_ACTIVE_MEMBERSHIP` | Safe membership feedback; no tenant session |
-| `401 SESSION_EXPIRED` | Session-expired feedback only when returned/observable as expired |
-| `401 SESSION_REVOKED` | Session-revoked/expired-safe feedback; may represent an expired refresh in the current backend |
+| `401 SESSION_EXPIRED` | Contractual session-expired feedback only when returned/observable as expired |
+| `401 SESSION_REVOKED` | Contractual session-revoked feedback; the frontend defensively provides expired-safe feedback if the current backend incorrectly returns it for an expired refresh, but it is not a valid contractual code for expiration |
 | `403 ORGANIZATION_ACCESS_DENIED` | Selection feedback; remain retryable on selector |
 | `401 UNAUTHORIZED`, `403 FORBIDDEN`, `409 CONFLICT`, other HTTP errors, malformed responses, network and timeout failures | Generic safe authentication feedback unless a more specific code above applies; never expose raw body, token, stack trace, or implementation detail |
 
