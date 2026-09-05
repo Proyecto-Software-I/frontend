@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "repository": "Proyecto-Software-I/frontend",
-  "generatedAt": "2026-09-05T08:43:42.536373Z",
+  "generatedAt": "2026-09-05T09:05:05.523978Z",
   "login": "DarksouleaterXD",
-  "points": 8,
-  "issues": 2,
+  "points": 9,
+  "issues": 3,
   "sizes": {
-    "XS": 0,
+    "XS": 1,
     "S": 0,
     "M": 1,
     "L": 1,
@@ -19,11 +19,12 @@
       "name": "Ingest",
       "start": "2026-09-01T00:00:00-04:00",
       "end": "2026-09-14T00:00:00-04:00",
-      "points": 8,
-      "awards": 2,
+      "points": 9,
+      "awards": 3,
       "issues": [
         14,
-        9
+        9,
+        18
       ]
     },
     {
@@ -104,6 +105,29 @@
       "points": 3,
       "mergedAt": "2026-09-05T08:43:27Z",
       "awardedAt": "2026-09-05T08:43:42.536288Z",
+      "source": "pull_request_target",
+      "sprint": {
+        "id": "sprint-1",
+        "number": 1,
+        "name": "Ingest",
+        "start": "2026-09-01T00:00:00-04:00",
+        "end": "2026-09-14T00:00:00-04:00"
+      },
+      "sprintAssignment": "mergedAt"
+    },
+    {
+      "schemaVersion": 2,
+      "type": "AWARD",
+      "repository": "Proyecto-Software-I/frontend",
+      "issue": 18,
+      "issueUrl": "https://github.com/Proyecto-Software-I/frontend/issues/18",
+      "pullRequest": 25,
+      "pullRequestUrl": "https://github.com/Proyecto-Software-I/frontend/pull/25",
+      "author": "DarksouleaterXD",
+      "size": "XS",
+      "points": 1,
+      "mergedAt": "2026-09-05T09:04:54Z",
+      "awardedAt": "2026-09-05T09:05:05.523880Z",
       "source": "pull_request_target",
       "sprint": {
         "id": "sprint-1",
