@@ -1,8 +1,8 @@
 ## 1. Preparacion y contratos
 
-- [ ] 1.1 Resolver la disponibilidad de `node_modules/next/dist/docs/`, consultar la documentacion de Next.js 16.2.12 para rutas dinamicas, route groups y `params`/`searchParams`, y registrar en el PR las guias revisadas antes de modificar codigo de aplicacion.
-- [ ] 1.2 Contrastar los endpoints, bodies, respuestas y errores implementados contra `Proyecto-Software-I/backend/main/openspec/specs/organization-memberships/spec.md` y `Proyecto-Software-I/backend/main/openspec/specs/auth/spec.md`, verificando que no se asuma ningun campo o status no publicado.
-- [ ] 1.3 Revisar `src/components/ui` y ejecutar `npx shadcn@latest info`; si siguen ausentes, agregar solamente `Input`, `Dialog` y `AlertDialog` mediante shadcn y verificar que no se incorpore otra biblioteca ni una dependencia innecesaria.
+- [x] 1.1 Resolver la disponibilidad de `node_modules/next/dist/docs/`, consultar la documentacion de Next.js 16.2.12 para rutas dinamicas, route groups y `params`/`searchParams`, y registrar en el PR las guias revisadas antes de modificar codigo de aplicacion.
+- [x] 1.2 Contrastar los endpoints, bodies, respuestas y errores implementados contra `Proyecto-Software-I/backend/main/openspec/specs/organization-memberships/spec.md` y `Proyecto-Software-I/backend/main/openspec/specs/auth/spec.md`, verificando que no se asuma ningun campo o status no publicado.
+- [x] 1.3 Revisar `src/components/ui` y ejecutar `npx shadcn@latest info`; si siguen ausentes, agregar solamente `Input`, `Dialog` y `AlertDialog` mediante shadcn y verificar que no se incorpore otra biblioteca ni una dependencia innecesaria.
 
 ## 2. Auth canonico y permisos
 
