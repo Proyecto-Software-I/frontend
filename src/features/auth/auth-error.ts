@@ -2,7 +2,7 @@ import { ApiError } from "@/lib/api/api-error";
 
 export function getAuthErrorMessage(
   error: unknown,
-  context: "login" | "register" | "selection" | "session" | "logout",
+  context: "login" | "register" | "selection" | "session" | "logout" | "invitation",
 ): string {
   const code = error instanceof ApiError ? error.code : null;
 
@@ -13,6 +13,11 @@ export function getAuthErrorMessage(
     USER_NOT_ACTIVE: "Tu usuario no está activo.",
     NO_ACTIVE_MEMBERSHIP: "Tu usuario no tiene una organización activa.",
     ORGANIZATION_ACCESS_DENIED: "No tenés acceso a esa organización.",
+    INVITATION_NOT_FOUND: "La invitación no existe o ya no está disponible.",
+    INVITATION_EXPIRED: "La invitación expiró. Solicitá una nueva invitación.",
+    INVITATION_REVOKED: "La invitación fue revocada. Solicitá una nueva invitación.",
+    INVITATION_ALREADY_ACCEPTED: "La invitación ya fue utilizada.",
+    INVITATION_EMAIL_MISMATCH: "La invitación corresponde a otra cuenta.",
     SESSION_EXPIRED: "Tu sesión expiró. Ingresá nuevamente.",
     SESSION_REVOKED: "Tu sesión ya no está disponible. Ingresá nuevamente.",
     UNAUTHORIZED: "No fue posible autenticar la solicitud. Ingresá nuevamente.",
@@ -34,6 +39,10 @@ export function getAuthErrorMessage(
 
   if (context === "logout") {
     return "No fue posible cerrar la sesión. Intentá nuevamente.";
+  }
+
+  if (context === "invitation") {
+    return "No fue posible procesar la invitación. Intentá nuevamente.";
   }
 
   return "No fue posible completar la solicitud. Intentá nuevamente.";

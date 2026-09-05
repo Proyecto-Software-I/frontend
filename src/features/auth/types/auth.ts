@@ -25,6 +25,7 @@ export interface ActiveMembership {
   id: string;
   status: string;
   roles: string[];
+  permissions: string[];
 }
 
 export interface AuthTokens {
@@ -106,6 +107,8 @@ function isActiveMembership(value: unknown): value is ActiveMembership {
     isNonEmptyString(value.status) &&
     Array.isArray(value.roles) &&
     value.roles.every((role) => typeof role === "string") &&
+    Array.isArray(value.permissions) &&
+    value.permissions.every((permission) => typeof permission === "string") &&
     !("organization" in value)
   );
 }

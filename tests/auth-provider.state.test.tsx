@@ -47,9 +47,14 @@ function Probe() {
       data-organization={auth.session?.activeOrganization?.id ?? ""}
       data-memberships={auth.session?.memberships.length ?? 0}
       data-roles={auth.session?.activeMembership?.roles.join(",") ?? ""}
+      data-can-read-members={String(auth.hasPermission("members.read"))}
+      data-can-manage-members={String(auth.hasPermission("members.manage"))}
+      data-can-delete-projects={String(auth.hasPermission("projects.delete"))}
+      data-access-token={auth.getAccessToken() ?? ""}
     >
       <button onClick={() => void auth.signUp({ email: "new@example.com", password: "password", firstName: "New", lastName: "User", organizationName: "New Org" }).catch(() => undefined)}>sign-up</button>
       <button onClick={() => void auth.chooseOrganization("org321").catch(() => undefined)}>choose</button>
+      <button onClick={() => void auth.reloadSession().catch(() => undefined)}>reload</button>
       <button onClick={() => void auth.signOut().catch(() => undefined)}>sign-out</button>
     </div>
   );
@@ -127,6 +132,35 @@ describe("AuthProvider state transitions", () => {
     expect(mocks.getMe).toHaveBeenCalledWith("refresh-token-1");
   });
 
+  it("derives permissions only from activeMembership permissions", async () => {
+    const session = sessionWithMemberships(1, false, "permission-token", "ACTIVE", ["members.read"]);
+    session.memberships[0].roles = ["OWNER"];
+    session.activeMembership = {
+      id: session.memberships[0].id,
+      status: session.memberships[0].status,
+      roles: ["OWNER"],
+      permissions: ["members.read"],
+    };
+    mocks.getMe.mockResolvedValue(contextFromSession(session));
+
+    await renderProvider();
+
+    expect(attribute("data-can-read-members")).toBe("true");
+    expect(attribute("data-can-manage-members")).toBe("false");
+    expect(attribute("data-can-delete-projects")).toBe("false");
+    expect(attribute("data-access-token")).toBe("refresh-token-1");
+  });
+
+  it("handles missing activeMembership permissions safely", async () => {
+    mocks.getMe.mockResolvedValue(contextFromSession(sessionWithMemberships(2)));
+
+    await renderProvider();
+
+    expect(attribute("data-status")).toBe("selection-required");
+    expect(attribute("data-can-read-members")).toBe("false");
+    expect(attribute("data-can-manage-members")).toBe("false");
+  });
+
   it("shares one bootstrap across Strict Mode duplicate effects", async () => {
     const pendingRefresh = deferred<ReturnType<typeof refreshResponse>>();
     mocks.refresh.mockReturnValue(pendingRefresh.promise);
@@ -184,6 +218,24 @@ describe("AuthProvider state transitions", () => {
     expect(mocks.selectOrganization).toHaveBeenCalledWith("refresh-token-1", "org321");
     await click("sign-out");
     expect(mocks.logout).toHaveBeenCalledWith("selected-access-token");
+  });
+
+  it("reloads the session with the in-memory token and ignores stale reload results", async () => {
+    await renderProvider();
+    const staleReload = deferred<ReturnType<typeof contextFromSession>>();
+    mocks.getMe.mockReturnValueOnce(staleReload.promise);
+    mocks.register.mockResolvedValue(selectedSessionWithMultipleMemberships("newer-token"));
+
+    await click("reload");
+    await click("sign-up");
+
+    expect(attribute("data-access-token")).toBe("newer-token");
+
+    const staleSession = sessionWithMemberships(1, false, "ignored-token");
+    await settle(() => staleReload.resolve(contextFromSession(staleSession)));
+
+    expect(attribute("data-access-token")).toBe("newer-token");
+    expect(attribute("data-organization")).toBe("org321");
   });
 
   it("preserves the authenticated session and access token after denied organization selection", async () => {

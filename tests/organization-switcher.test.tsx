@@ -133,6 +133,7 @@ describe("OrganizationSwitcher", () => {
       id: replacement.memberships[0].id,
       status: replacement.memberships[0].status,
       roles: replacement.memberships[0].roles,
+      permissions: ["organization.read", "members.read", "members.manage"],
     };
     mocks.chooseOrganization.mockImplementation(async () => {
       mocks.publishSession?.(contextFromSession(replacement));
@@ -283,6 +284,7 @@ function sessionWithThreeActiveMemberships(): SessionContext {
     id: session.memberships[2].id,
     status: session.memberships[2].status,
     roles: session.memberships[2].roles,
+    permissions: ["organization.read", "members.read"],
   };
   return contextFromSession(session);
 }

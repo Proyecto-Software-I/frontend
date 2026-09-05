@@ -8,6 +8,7 @@ import {
   register,
   selectOrganization,
 } from "@/features/auth/api/auth-api";
+import { isSessionContext } from "@/features/auth/types/auth";
 import {
   selectedSessionWithMultipleMemberships,
   sessionWithMemberships,
@@ -154,6 +155,33 @@ describe("authentication API contract", () => {
     expect(selected.memberships).toHaveLength(2);
     expect(selected.activeOrganization?.id).toBe("org321");
     expect(selected.activeMembership?.roles).toEqual([]);
+    expect(selected.activeMembership?.permissions).toEqual([
+      "organization.read",
+      "members.read",
+      "members.manage",
+    ]);
+  });
+
+  it("validates active membership permissions from the Auth contract", () => {
+    const validSession = sessionWithMemberships(1, false, "token", "ACTIVE", []);
+    expect(isSessionContext({ ...validSession, auth: undefined })).toBe(true);
+
+    const malformedPermissions = sessionWithMemberships(1);
+    malformedPermissions.activeMembership = {
+      id: "membership-1",
+      status: "ACTIVE",
+      roles: [],
+      permissions: ["members.read", 1] as unknown as string[],
+    };
+    expect(isSessionContext({ ...malformedPermissions, auth: undefined })).toBe(false);
+
+    const missingPermissions = sessionWithMemberships(1);
+    missingPermissions.activeMembership = {
+      id: "membership-1",
+      status: "ACTIVE",
+      roles: [],
+    } as unknown as typeof missingPermissions.activeMembership;
+    expect(isSessionContext({ ...missingPermissions, auth: undefined })).toBe(false);
   });
 
   it("treats logout 204 as success with Bearer and credentials", async () => {

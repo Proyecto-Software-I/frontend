@@ -40,6 +40,9 @@ interface AuthContextValue extends AuthState {
   signIn: (input: LoginInput) => Promise<void>;
   signUp: (input: RegisterInput) => Promise<void>;
   chooseOrganization: (organizationId: string) => Promise<void>;
+  getAccessToken: () => string | null;
+  hasPermission: (permission: string) => boolean;
+  reloadSession: () => Promise<SessionContext>;
   signOut: () => Promise<void>;
   clearNotice: () => void;
 }
@@ -202,6 +205,23 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     adoptFullSession(operation, fullSession);
   }
 
+  async function reloadSession(): Promise<SessionContext> {
+    const accessToken = authMemory.accessToken;
+    if (!accessToken) {
+      throw new Error("La sesión ya no está disponible.");
+    }
+
+    const operation = beginOperation();
+    const session = await getMe(accessToken);
+    if (authMemory.generation === operation) {
+      publish(
+        { status: sessionStatus(session), session, notice: null },
+        accessToken,
+      );
+    }
+    return session;
+  }
+
   async function signOut(): Promise<void> {
     const accessToken = authMemory.accessToken;
     const operation = beginOperation();
@@ -225,6 +245,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         signIn,
         signUp,
         chooseOrganization,
+        getAccessToken: () => authMemory.accessToken,
+        hasPermission: (permission: string) =>
+          state.session?.activeMembership?.permissions.includes(permission) ?? false,
+        reloadSession,
         signOut,
         clearNotice: () => publish({ ...authMemory.state, notice: null }, authMemory.accessToken),
       }}
