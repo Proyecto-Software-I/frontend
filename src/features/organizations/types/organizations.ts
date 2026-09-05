@@ -1,6 +1,6 @@
 import type { AuthUser, Organization } from "@/features/auth/types/auth";
 
-export type OrganizationMemberStatus = "ACTIVE" | "SUSPENDED";
+export type OrganizationMemberStatus = "ACTIVE" | "SUSPENDED" | "REMOVED";
 
 export type OrganizationInvitationStatus =
   | "PENDING"

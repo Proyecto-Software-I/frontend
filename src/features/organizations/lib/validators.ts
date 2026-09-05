@@ -14,6 +14,7 @@ import type {
 const memberStatuses = new Set<OrganizationMemberStatus>([
   "ACTIVE",
   "SUSPENDED",
+  "REMOVED",
 ]);
 const invitationStatuses = new Set<OrganizationInvitationStatus>([
   "PENDING",

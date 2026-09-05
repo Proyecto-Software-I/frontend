@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   chooseOrganization: vi.fn(),
   publishSession: null as ((session: SessionContext) => void) | null,
   replace: vi.fn(),
+  pathname: "/dashboard",
   session: null as SessionContext | null,
   signOut: vi.fn(),
 }));
@@ -20,11 +21,14 @@ vi.mock("@/features/auth/hooks/auth-provider", () => ({
   useAuth: () => ({
     session: mocks.session,
     chooseOrganization: mocks.chooseOrganization,
+    hasPermission: (permission: string) =>
+      mocks.session?.activeMembership?.permissions.includes(permission) ?? false,
     signOut: mocks.signOut,
   }),
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => mocks.pathname,
   useRouter: () => ({ replace: mocks.replace }),
 }));
 
@@ -36,6 +40,7 @@ describe("OrganizationSwitcher", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     mocks.chooseOrganization.mockReset();
+    mocks.pathname = "/dashboard";
     mocks.publishSession = null;
     mocks.replace.mockReset();
     mocks.signOut.mockReset();
@@ -43,11 +48,7 @@ describe("OrganizationSwitcher", () => {
   });
 
   afterEach(async () => {
-    await act(async () => {
-      while (mountedRoots.length > 0) {
-        mountedRoots.pop()?.unmount();
-      }
-    });
+    await cleanupMountedRoots();
     document.body.innerHTML = "";
   });
 
@@ -174,6 +175,29 @@ describe("OrganizationSwitcher", () => {
     expect(document.querySelector('[role="menu"]')).not.toBeNull();
     expect(mocks.replace).not.toHaveBeenCalled();
   });
+
+  it("shows Members navigation only with members.read and marks pathname active", async () => {
+    mocks.pathname = "/settings/members";
+    await renderWorkspace();
+
+    const membersLink = document.querySelector<HTMLAnchorElement>('a[href="/settings/members"]');
+    const dashboardLink = document.querySelector<HTMLAnchorElement>('a[href="/dashboard"]');
+    expect(membersLink?.textContent).toContain("Members");
+    expect(membersLink?.getAttribute("aria-current")).toBe("page");
+    expect(dashboardLink?.getAttribute("aria-current")).toBeNull();
+
+    await cleanupMountedRoots();
+    const session = selectedSessionWithMultipleMemberships();
+    session.activeMembership = session.activeMembership
+      ? { ...session.activeMembership, permissions: ["organization.read"] }
+      : null;
+    mocks.session = contextFromSession(session);
+    mocks.pathname = "/dashboard";
+    await renderWorkspace();
+
+    expect(document.querySelector('a[href="/settings/members"]')).toBeNull();
+    expect(document.body.textContent).not.toContain("Members");
+  });
 });
 
 async function renderSwitcher(): Promise<void> {
@@ -193,6 +217,14 @@ async function renderWorkspace(): Promise<void> {
   mountedRoots.push(root);
   await act(async () => {
     root.render(<AuthSessionHarness />);
+  });
+}
+
+async function cleanupMountedRoots(): Promise<void> {
+  await act(async () => {
+    while (mountedRoots.length > 0) {
+      mountedRoots.pop()?.unmount();
+    }
   });
 }
 

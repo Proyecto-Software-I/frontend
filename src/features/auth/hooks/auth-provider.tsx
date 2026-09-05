@@ -48,7 +48,11 @@ interface AuthContextValue extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const protectedPaths = new Set(["/dashboard", "/auth/select-organization"]);
+const protectedPaths = new Set([
+  "/dashboard",
+  "/settings/members",
+  "/auth/select-organization",
+]);
 const initialState: AuthState = {
   status: "bootstrapping",
   session: null,

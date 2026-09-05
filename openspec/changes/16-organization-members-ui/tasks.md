@@ -25,7 +25,7 @@
 
 ## 4. Estado de miembros e invitaciones
 
-- [ ] 4.1 Implementar el estado de lectura de miembros e invitaciones con carga independiente, retry y descarte de resultados obsoletos al cambiar tenant; verificar loading, exito, vacio, error parcial y cambio de organizacion.
+- [x] 4.1 Implementar el estado de lectura de miembros e invitaciones con carga independiente, retry y descarte de resultados obsoletos al cambiar tenant; verificar loading, exito, vacio, error parcial y cambio de organizacion.
 - [ ] 4.2 Implementar creacion de invitacion sin optimistic update, refetch confirmado y almacenamiento temporal de `acceptanceUrl`; verificar que cerrar la confirmacion elimina el link en memoria.
 - [ ] 4.3 Implementar copia al portapapeles con feedback de exito y fallo, y verificar ambos resultados sin persistir el link.
 - [ ] 4.4 Implementar revocacion, suspend, reactivate y remove con pending por recurso, confirmacion y reconciliacion posterior; verificar que un fallo conserva el ultimo estado confirmado.
@@ -33,11 +33,11 @@
 
 ## 5. Pagina de miembros y App Shell
 
-- [ ] 5.1 Agregar `/settings/members` bajo el layout del workspace mediante una pagina Server Component que componga el cliente de feature, y verificar que WorkspaceBoundary proteja la ruta y el tenant activo.
-- [ ] 5.2 Actualizar la navegacion desktop y mobile para mostrar `Members` solo con `members.read` y derivar la entrada activa desde pathname; verificar Dashboard, Members y ausencia sin permiso.
-- [ ] 5.3 Construir el encabezado con el titulo `Miembros` y la explicacion `Gestiona las personas que tienen acceso a esta organización.`, junto con los estados de acceso, carga, error y retry usando componentes y tokens semanticos existentes; verificar el copy y que no se expongan datos cuando falta `members.read`.
-- [ ] 5.4 Renderizar miembros como tabla semantica en desktop y cards/list items en mobile con initials/avatar, nombre, email, roles, estado y acciones; verificar `ACTIVE`, `SUSPENDED`, unico owner y ausencia de `REMOVED`.
-- [ ] 5.5 Renderizar `Pending invitations` con email, expiracion, invitador y rol, filtrar acciones a `PENDING`, y verificar el estado `No pending invitations.`.
+- [x] 5.1 Agregar `/settings/members` bajo el layout del workspace mediante una pagina Server Component que componga el cliente de feature, y verificar que WorkspaceBoundary proteja la ruta y el tenant activo.
+- [x] 5.2 Actualizar la navegacion desktop y mobile para mostrar `Members` solo con `members.read` y derivar la entrada activa desde pathname; verificar Dashboard, Members y ausencia sin permiso.
+- [x] 5.3 Construir el encabezado con el titulo `Miembros` y la explicacion `Gestiona las personas que tienen acceso a esta organización.`, junto con los estados de acceso, carga, error y retry usando componentes y tokens semanticos existentes; verificar el copy y que no se expongan datos cuando falta `members.read`.
+- [x] 5.4 Renderizar miembros como tabla semantica en desktop y cards/list items en mobile con initials/avatar, nombre, email, roles, estado y acciones; verificar `ACTIVE`, `SUSPENDED`, unico owner y ausencia de `REMOVED`.
+- [x] 5.5 Renderizar `Pending invitations` con email, expiracion, invitador y rol, filtrar acciones a `PENDING`, y verificar el estado `No pending invitations.`.
 - [ ] 5.6 Construir el dialog de invitacion y la confirmacion de link de un solo uso, y verificar label, error asociado, foco, Escape, pending y copy que no afirma envio de email.
 - [ ] 5.7 Construir confirmaciones y feedback para revoke, suspend y remove, junto con reactivate, y verificar visibilidad exclusiva con `members.manage`, cancelacion y `LAST_OWNER_REQUIRED`.
 

@@ -50,7 +50,8 @@ describe("organization runtime contracts", () => {
   });
 
   it("rejects malformed organization members", () => {
-    expect(isOrganizationMember({ ...member, status: "REMOVED" })).toBe(false);
+    expect(isOrganizationMember({ ...member, status: "REMOVED" })).toBe(true);
+    expect(isOrganizationMember({ ...member, status: "UNKNOWN" })).toBe(false);
     expect(isOrganizationMember({ ...member, joinedAt: "not-a-date" })).toBe(false);
     expect(isOrganizationMember({ ...member, roles: ["OWNER", 1] })).toBe(false);
     expect(isOrganizationMember({ ...member, user: { ...member.user, email: null } })).toBe(false);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -219,14 +219,6 @@ export function WorkspaceShell({
   );
 }
 
-const navigationItems = [
-  { label: "Dashboard", icon: "dashboard", active: true },
-  { label: "Proyectos", icon: "folder", active: false },
-  { label: "Sistemas", icon: "account_tree", active: false },
-  { label: "Análisis", icon: "analytics", active: false },
-  { label: "Modernización", icon: "auto_fix_high", active: false },
-] as const;
-
 const supportItems = [
   { label: "Soporte", icon: "help" },
   { label: "Documentación", icon: "description" },
@@ -235,6 +227,20 @@ const supportItems = [
 function WorkspaceNavigation({
   onNavigate,
 }: Readonly<{ onNavigate?: () => void }>) {
+  const pathname = usePathname();
+  const { hasPermission } = useAuth();
+  const canReadMembers = hasPermission("members.read");
+  const navigationItems = [
+    { label: "Dashboard", icon: "dashboard", href: "/dashboard", enabled: true },
+    ...(canReadMembers
+      ? [{ label: "Members", icon: "group", href: "/settings/members", enabled: true }]
+      : []),
+    { label: "Proyectos", icon: "folder", href: null, enabled: false },
+    { label: "Sistemas", icon: "account_tree", href: null, enabled: false },
+    { label: "Análisis", icon: "analytics", href: null, enabled: false },
+    { label: "Modernización", icon: "auto_fix_high", href: null, enabled: false },
+  ] as const;
+
   return (
     <nav
       aria-label="Navegación del workspace"
@@ -243,11 +249,16 @@ function WorkspaceNavigation({
       <ul className="grid gap-1">
         {navigationItems.map((item) => (
           <li key={item.label}>
-            {item.active ? (
+            {item.enabled && item.href ? (
               <Link
-                href="/dashboard"
+                href={item.href}
                 onClick={onNavigate}
-                className="flex items-center gap-3 border-l-2 border-primary bg-background/10 px-4 py-3 text-sm font-medium text-background outline-none transition hover:bg-background/15 focus-visible:ring-3 focus-visible:ring-ring/50"
+                aria-current={pathname === item.href ? "page" : undefined}
+                className={
+                  pathname === item.href
+                    ? "flex items-center gap-3 border-l-2 border-primary bg-background/10 px-4 py-3 text-sm font-medium text-background outline-none transition hover:bg-background/15 focus-visible:ring-3 focus-visible:ring-ring/50"
+                    : "flex items-center gap-3 border-l-2 border-transparent px-4 py-3 text-sm font-medium text-background/75 outline-none transition hover:bg-background/10 hover:text-background focus-visible:ring-3 focus-visible:ring-ring/50"
+                }
               >
                 <span className="material-symbols-outlined text-xl" aria-hidden="true">
                   {item.icon}
