@@ -162,6 +162,18 @@ describe("InvitationPageContent", () => {
     expect(mocks.replace).toHaveBeenCalledWith("/dashboard");
   });
 
+  it("normalizes account and invitation emails before offering Join", async () => {
+    mocks.status = "authenticated";
+    mocks.session = session(" MEMBER@EXAMPLE.COM ", []);
+    mocks.getInvitationPreview.mockResolvedValueOnce(preview);
+
+    await render("token-1");
+    await flush();
+
+    expect(button("Join Trusted Organization")).not.toBeNull();
+    expect(button("Sign out / use another account")).toBeNull();
+  });
+
   it("blocks repeated acceptance while the request is pending", async () => {
     mocks.status = "authenticated";
     mocks.session = session("member@example.com", []);

@@ -7,7 +7,11 @@ import {
   isOrganizationInvitation,
   isOrganizationMember,
 } from "@/features/organizations/lib/validators";
-import type { OrganizationMember } from "@/features/organizations/types/organizations";
+import type {
+  InvitationPreview,
+  OrganizationInvitation,
+  OrganizationMember,
+} from "@/features/organizations/types/organizations";
 
 const member = {
   id: "membership-1",
@@ -103,6 +107,20 @@ describe("organization runtime contracts", () => {
       roles: ["OWNER"],
     };
     expect(membership.organization.slug).toBe("organization");
+  });
+
+  it("derives invitation and preview projections from canonical Auth and Organization types", () => {
+    const acceptedInvitation: OrganizationInvitation = invitation;
+    const invitedBy: Pick<AuthUser, "id" | "email" | "displayName"> = acceptedInvitation.invitedBy;
+    const acceptedPreview: InvitationPreview = {
+      email: "member@example.com",
+      organization: { name: "Organization", slug: "organization" },
+      expiresAt: "2026-09-08T10:00:00.000Z",
+    };
+    const organization: Pick<Organization, "name" | "slug"> = acceptedPreview.organization;
+
+    expect(invitedBy.email).toBe("owner@example.com");
+    expect(organization.slug).toBe("organization");
   });
 });
 

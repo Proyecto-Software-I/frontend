@@ -51,10 +51,10 @@
 
 ## 7. Pruebas automatizadas
 
-- [ ] 7.1 Extender fixtures y contract tests Auth para `permissions`, registro por invitacion, retornos seguros y recarga de sesion; verificar con `npm test -- --run`.
-- [ ] 7.2 Agregar contract tests de todos los adapters de organizaciones, validadores runtime y errores funcionales; verificar con `npm test -- --run`.
-- [ ] 7.3 Agregar pruebas de comportamiento para `members.read` sin manage, manage completo, estados vacios, invitation link de un uso y mutaciones pesimistas; verificar con `npm test -- --run`.
-- [ ] 7.4 Agregar pruebas de invitacion valida/invalida/expirada/revocada/aceptada, cuenta correcta/incorrecta y usuario nuevo/existente; verificar con `npm test -- --run`.
+- [x] 7.1 Extender fixtures y contract tests Auth para `permissions`, registro por invitacion, retornos seguros y recarga de sesion; verificar con `npm test -- --run`.
+- [x] 7.2 Agregar contract tests de todos los adapters de organizaciones, validadores runtime y errores funcionales; verificar con `npm test -- --run`.
+- [x] 7.3 Agregar pruebas de comportamiento para `members.read` sin manage, manage completo, estados vacios, invitation link de un uso y mutaciones pesimistas; verificar con `npm test -- --run`.
+- [x] 7.4 Agregar pruebas de invitacion valida/invalida/expirada/revocada/aceptada, cuenta correcta/incorrecta y usuario nuevo/existente; verificar con `npm test -- --run`.
 
 ## 8. Verificacion manual
 
