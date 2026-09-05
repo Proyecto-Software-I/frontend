@@ -1,3 +1,4 @@
+import { InvitationRegisterBoundary } from "@/features/auth/components/invitation-register-boundary";
 import { RegisterForm } from "@/features/auth/components/register-form";
 import { getValidInvitationReturnTo } from "@/features/auth/lib/invitation-return";
 
@@ -6,17 +7,14 @@ export default async function RegisterPage({
 }: PageProps<"/auth/register">) {
   const params = await searchParams;
   const invitationToken = getStringParam(params.invitationToken);
-  const email = getStringParam(params.email);
-  const organizationName = getStringParam(params.organizationName);
-  const invitation =
-    invitationToken &&
-    email &&
-    organizationName &&
-    getValidInvitationReturnTo(`/invite/${invitationToken}`)
-      ? { invitationToken, email, organizationName }
-      : undefined;
+  const validInvitationToken =
+    invitationToken && getValidInvitationReturnTo(`/invite/${invitationToken}`)
+      ? invitationToken
+      : null;
 
-  return <RegisterForm invitation={invitation} />;
+  return validInvitationToken
+    ? <InvitationRegisterBoundary token={validInvitationToken} />
+    : <RegisterForm />;
 }
 
 function getStringParam(value: string | string[] | undefined): string | null {

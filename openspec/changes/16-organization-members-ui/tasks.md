@@ -29,7 +29,7 @@
 - [x] 4.2 Implementar creacion de invitacion sin optimistic update, refetch confirmado y almacenamiento temporal de `acceptanceUrl`; verificar que cerrar la confirmacion elimina el link en memoria.
 - [x] 4.3 Implementar copia al portapapeles con feedback de exito y fallo, y verificar ambos resultados sin persistir el link.
 - [x] 4.4 Implementar revocacion, suspend, reactivate y remove con pending por recurso, confirmacion y reconciliacion posterior; verificar que un fallo conserva el ultimo estado confirmado.
-- [ ] 4.5 Implementar la secuencia accept -> reload `/me` -> resolver membership por slug -> select organization -> dashboard, y verificar exito, membership ausente, error de aceptacion y error de seleccion.
+- [x] 4.5 Implementar la secuencia accept -> reload `/me` -> resolver membership por slug -> select organization -> dashboard, y verificar exito, membership ausente, error de aceptacion y error de seleccion.
 
 ## 5. Pagina de miembros y App Shell
 
@@ -43,11 +43,11 @@
 
 ## 6. Pagina publica de invitacion
 
-- [ ] 6.1 Agregar `/invite/[token]` bajo Auth pero fuera del workspace mediante una pagina Server Component y verificar que sea accesible sin tenant activo.
-- [ ] 6.2 Construir preview con carga, retry, estado valido y estados explicitos para not found, expired, revoked y accepted; verificar que estados invalidos no muestren acciones de aceptacion o registro.
-- [ ] 6.3 Mostrar acciones anonimas hacia login y registro existentes conservando el token solo en URL/returnTo, y verificar que no se escriba en localStorage, sessionStorage ni cookies propias.
-- [ ] 6.4 Mostrar `Join` solo para la cuenta autenticada correcta y el flujo de cambio de cuenta para email distinto; verificar que una cuenta incorrecta no pueda iniciar accept.
-- [ ] 6.5 Integrar el registro por invitacion y la aceptacion de usuario existente hasta `/dashboard`, y verificar ambos recorridos contra un backend compatible o mocks de contrato equivalentes.
+- [x] 6.1 Agregar `/invite/[token]` bajo Auth pero fuera del workspace mediante una pagina Server Component y verificar que sea accesible sin tenant activo.
+- [x] 6.2 Construir preview con carga, retry, estado valido y estados explicitos para not found, expired, revoked y accepted; verificar que estados invalidos no muestren acciones de aceptacion o registro.
+- [x] 6.3 Mostrar acciones anonimas hacia login y registro existentes conservando el token solo en URL/returnTo, y verificar que no se escriba en localStorage, sessionStorage ni cookies propias.
+- [x] 6.4 Mostrar `Join` solo para la cuenta autenticada correcta y el flujo de cambio de cuenta para email distinto; verificar que una cuenta incorrecta no pueda iniciar accept.
+- [x] 6.5 Integrar el registro por invitacion y la aceptacion de usuario existente hasta `/dashboard`, y verificar ambos recorridos contra un backend compatible o mocks de contrato equivalentes.
 
 ## 7. Pruebas automatizadas
 
