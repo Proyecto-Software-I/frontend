@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "repository": "Proyecto-Software-I/frontend",
   "scope": "sprint",
-  "generatedAt": "2026-09-05T09:05:05.523978Z",
+  "generatedAt": "2026-09-05T20:10:32.267642Z",
   "sprint": {
     "id": "sprint-1",
     "number": 1,
@@ -10,8 +10,8 @@
     "start": "2026-09-01T00:00:00-04:00",
     "end": "2026-09-14T00:00:00-04:00"
   },
-  "totalPoints": 23,
-  "awards": 6,
+  "totalPoints": 31,
+  "awards": 7,
   "contributors": [
     {
       "login": "brahiamsinho",
@@ -35,6 +35,18 @@
         "M": 1,
         "L": 1,
         "XL": 0
+      }
+    },
+    {
+      "login": "Leo14fel",
+      "points": 8,
+      "issues": 1,
+      "sizes": {
+        "XS": 0,
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 1
       }
     },
     {

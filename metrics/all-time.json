@@ -2,10 +2,10 @@
   "schemaVersion": 2,
   "repository": "Proyecto-Software-I/frontend",
   "scope": "all-time",
-  "generatedAt": "2026-09-05T09:05:05.523978Z",
+  "generatedAt": "2026-09-05T20:10:32.267642Z",
   "sprint": null,
-  "totalPoints": 23,
-  "awards": 6,
+  "totalPoints": 31,
+  "awards": 7,
   "contributors": [
     {
       "login": "brahiamsinho",
@@ -29,6 +29,18 @@
         "M": 1,
         "L": 1,
         "XL": 0
+      }
+    },
+    {
+      "login": "Leo14fel",
+      "points": 8,
+      "issues": 1,
+      "sizes": {
+        "XS": 0,
+        "S": 0,
+        "M": 0,
+        "L": 0,
+        "XL": 1
       }
     },
     {
