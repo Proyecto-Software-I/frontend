@@ -9,13 +9,25 @@ import {
   type SessionContext,
 } from "../types/auth";
 
-export interface RegisterInput {
-  email: string;
-  password: string;
+interface RegisterBaseInput {
   firstName: string;
   lastName: string;
-  organizationName: string;
+  password: string;
 }
+
+export interface NormalRegisterInput extends RegisterBaseInput {
+  email: string;
+  organizationName: string;
+  invitationToken?: never;
+}
+
+export interface InvitationRegisterInput extends RegisterBaseInput {
+  invitationToken: string;
+  email?: never;
+  organizationName?: never;
+}
+
+export type RegisterInput = NormalRegisterInput | InvitationRegisterInput;
 
 export interface LoginInput {
   email: string;
@@ -31,12 +43,26 @@ function requireResponse<T>(value: unknown, isValid: (value: unknown) => value i
 }
 
 export async function register(input: RegisterInput): Promise<FullSession> {
+  const body = "invitationToken" in input
+    ? {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        password: input.password,
+        invitationToken: input.invitationToken,
+      }
+    : {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        password: input.password,
+        organizationName: input.organizationName,
+      };
   const response = await apiRequest<unknown>("/api/auth/register", {
     method: "POST",
     expectedStatus: 201,
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify(body),
   });
 
   return requireResponse(response, isFullSession);

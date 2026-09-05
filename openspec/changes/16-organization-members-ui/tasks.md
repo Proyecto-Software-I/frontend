@@ -7,12 +7,12 @@
 ## 2. Auth canonico y permisos
 
 - [x] 2.1 Extender `ActiveMembership` con `permissions: string[]` y actualizar los guards de sesion para validar permisos sin inferirlos desde roles; verificar con pruebas de respuestas validas, arrays vacios y respuestas malformadas.
-- [ ] 2.2 Modelar inputs de registro normal e invitacion como variantes mutuamente excluyentes y adaptar el adapter Auth para omitir `email` y `organizationName` en modo invitacion; verificar bodies y credenciales en contract tests.
+- [x] 2.2 Modelar inputs de registro normal e invitacion como variantes mutuamente excluyentes y adaptar el adapter Auth para omitir `email` y `organizationName` en modo invitacion; verificar bodies y credenciales en contract tests.
 - [x] 2.3 Extender el Auth context existente con `hasPermission`, un accessor de token solo en memoria y una recarga coordinada de `/api/auth/me`; verificar que operaciones obsoletas no reemplacen una sesion mas nueva.
 - [x] 2.4 Incorporar el mapeo seguro de errores de invitacion en Auth y verificar que ningun mensaje visible incluya token, body crudo o detalle tecnico.
 - [x] 2.5 Implementar y probar un validador de retorno que acepte solo rutas locales `/invite/[token]` y rechace URLs externas, protocol-relative, vacias o no soportadas.
-- [ ] 2.6 Adaptar `SessionBoundary`, login y registro para conservar un retorno de invitacion valido, incluyendo sesiones `selection-required`, y verificar que el comportamiento normal siga dirigiendo a selector o dashboard.
-- [ ] 2.7 Adaptar el formulario de registro al modo invitacion con email read-only y sin `organizationName`, y verificar estados idle, validacion, loading, exito y errores funcionales.
+- [x] 2.6 Adaptar `SessionBoundary`, login y registro para conservar un retorno de invitacion valido, incluyendo sesiones `selection-required`, y verificar que el comportamiento normal siga dirigiendo a selector o dashboard.
+- [x] 2.7 Adaptar el formulario de registro al modo invitacion con email read-only y sin `organizationName`, y verificar estados idle, validacion, loading, exito y errores funcionales.
 
 ## 3. Contratos de organizaciones
 

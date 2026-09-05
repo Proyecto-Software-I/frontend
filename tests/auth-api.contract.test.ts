@@ -7,6 +7,7 @@ import {
   refresh,
   register,
   selectOrganization,
+  type RegisterInput,
 } from "@/features/auth/api/auth-api";
 import { isSessionContext } from "@/features/auth/types/auth";
 import {
@@ -52,15 +53,17 @@ describe("authentication API contract", () => {
       expect.objectContaining({
         method: "POST",
         credentials: "include",
-        body: JSON.stringify({
-          email: "user@example.com",
-          password: "password",
-          firstName: "Test",
-          lastName: "User",
-          organizationName: "Organization 1",
-        }),
       }),
     );
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as Record<string, unknown>;
+    expect(body).toEqual({
+      firstName: "Test",
+      lastName: "User",
+      email: "user@example.com",
+      password: "password",
+      organizationName: "Organization 1",
+    });
+    expect(body).not.toHaveProperty("invitationToken");
     expect(registerResponse.status).toBe(201);
     expect(registerResponse.headers.get("set-cookie")).toBe(
       "legacylift_refresh=opaque; Path=/api/auth; HttpOnly; SameSite=Lax",
@@ -160,6 +163,55 @@ describe("authentication API contract", () => {
       "members.read",
       "members.manage",
     ]);
+  });
+
+  it("sends invitation registration to the same endpoint without email or organization name", async () => {
+    const session = sessionWithMemberships(1);
+    fetchMock.mockResolvedValue(response(201, session));
+    const input: RegisterInput = {
+      firstName: "Invited",
+      lastName: "User",
+      password: "password",
+      invitationToken: "invite-token-123",
+    };
+
+    await expect(register(input)).resolves.toEqual(session);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3000/api/auth/register",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "include",
+      }),
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      firstName: "Invited",
+      lastName: "User",
+      password: "password",
+      invitationToken: "invite-token-123",
+    });
+  });
+
+  it("keeps the canonical register adapter from sending mixed invitation fields", async () => {
+    const session = sessionWithMemberships(1);
+    fetchMock.mockResolvedValue(response(201, session));
+    const bypassedTypeSystem = {
+      firstName: "Invited",
+      lastName: "User",
+      email: "ignored@example.com",
+      password: "password",
+      organizationName: "Ignored Org",
+      invitationToken: "invite-token-123",
+    } as RegisterInput;
+
+    await register(bypassedTypeSystem);
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      firstName: "Invited",
+      lastName: "User",
+      password: "password",
+      invitationToken: "invite-token-123",
+    });
   });
 
   it("validates active membership permissions from the Auth contract", () => {
