@@ -46,8 +46,9 @@ const invitation = {
 };
 
 describe("organization runtime contracts", () => {
-  it("accepts a valid organization member with a safe avatar URL and reuses AuthUser projection", () => {
+  it("accepts valid organization members allowed by the backend contract", () => {
     expect(isOrganizationMember(member)).toBe(true);
+    expect(isOrganizationMember({ ...member, status: "INVITED", joinedAt: null })).toBe(true);
     expect(isOrganizationMember({ ...member, user: { ...member.user, avatarUrl: "https://example.com/avatar.png" } })).toBe(true);
     const accepted: OrganizationMember = member;
     const authUser: AuthUser = accepted.user;
@@ -63,8 +64,20 @@ describe("organization runtime contracts", () => {
     expect(isOrganizationMember({ ...member, user: { ...member.user, avatarUrl: 1 } })).toBe(false);
   });
 
-  it("accepts valid organization invitations and rejects malformed nested objects", () => {
+  it("accepts nullable invitation relations allowed by the backend contract", () => {
     expect(isOrganizationInvitation(invitation)).toBe(true);
+    expect(isOrganizationInvitation({ ...invitation, invitedBy: null })).toBe(true);
+    expect(isOrganizationInvitation({ ...invitation, proposedRole: null })).toBe(true);
+    expect(
+      isOrganizationInvitation({
+        ...invitation,
+        invitedBy: null,
+        proposedRole: null,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects malformed organization invitation fields", () => {
     expect(isOrganizationInvitation({ ...invitation, tokenHash: "secret" })).toBe(false);
     expect(isOrganizationInvitation({ ...invitation, status: "UNKNOWN" })).toBe(false);
     expect(isOrganizationInvitation({ ...invitation, invitedBy: { id: "user-1", displayName: null } })).toBe(true);
@@ -115,7 +128,7 @@ describe("organization runtime contracts", () => {
 
   it("derives invitation and preview projections from canonical Auth and Organization types", () => {
     const acceptedInvitation: OrganizationInvitation = invitation;
-    const invitedBy: Pick<AuthUser, "id" | "displayName"> = acceptedInvitation.invitedBy;
+    const invitedBy: Pick<AuthUser, "id" | "displayName"> | null = acceptedInvitation.invitedBy;
     const acceptedPreview: InvitationPreview = {
       email: "member@example.com",
       organization: { name: "Organization", slug: "organization" },
@@ -123,7 +136,7 @@ describe("organization runtime contracts", () => {
     };
     const organization: Pick<Organization, "name" | "slug"> = acceptedPreview.organization;
 
-    expect(invitedBy.displayName).toBe("Owner User");
+    expect(invitedBy?.displayName).toBe("Owner User");
     expect(organization.slug).toBe("organization");
   });
 });
