@@ -16,12 +16,12 @@
 
 ## 3. Contratos de organizaciones
 
-- [ ] 3.1 Crear tipos de `OrganizationMember`, `OrganizationInvitation`, preview y respuestas derivando la proyeccion de usuario desde `AuthUser`, y verificar que no exista una segunda definicion de User, Organization, Membership o Auth State.
-- [ ] 3.2 Implementar validadores runtime para miembros, invitaciones, preview y creacion, incluyendo status, fechas, nested user, invitedBy, proposedRole y `acceptanceUrl`; verificar casos validos y malformados con tests.
-- [ ] 3.3 Crear adapters para listar miembros e invitaciones con Bearer y verificar paths, metodos, ausencia de `organizationId` de cliente y responses `200` mediante contract tests.
-- [ ] 3.4 Crear adapters para crear/revocar invitaciones y suspender/reactivar/remover memberships, y verificar request bodies, IDs codificados, Bearer y manejo de cualquier respuesta 2xx no especificada.
-- [ ] 3.5 Crear adapters para preview publico sin Bearer y aceptacion autenticada con Bearer, y verificar metodos, paths y ausencia de credenciales inventadas.
-- [ ] 3.6 Implementar el mapper seguro de errores funcionales de organizaciones y verificar todos los codigos publicados, incluidos `LAST_OWNER_REQUIRED` y `MEMBER_ACCESS_DENIED`.
+- [x] 3.1 Crear tipos de `OrganizationMember`, `OrganizationInvitation`, preview y respuestas derivando la proyeccion de usuario desde `AuthUser`, y verificar que no exista una segunda definicion de User, Organization, Membership o Auth State.
+- [x] 3.2 Implementar validadores runtime para miembros, invitaciones, preview y creacion, incluyendo status, fechas, nested user, invitedBy, proposedRole y `acceptanceUrl`; verificar casos validos y malformados con tests.
+- [x] 3.3 Crear adapters para listar miembros e invitaciones con Bearer y verificar paths, metodos, ausencia de `organizationId` de cliente y responses `200` mediante contract tests.
+- [x] 3.4 Crear adapters para crear/revocar invitaciones y suspender/reactivar/remover memberships, y verificar request bodies, IDs codificados, Bearer y manejo de cualquier respuesta 2xx no especificada.
+- [x] 3.5 Crear adapters para preview publico sin Bearer y aceptacion autenticada con Bearer, y verificar metodos, paths y ausencia de credenciales inventadas.
+- [x] 3.6 Implementar el mapper seguro de errores funcionales de organizaciones y verificar todos los codigos publicados, incluidos `LAST_OWNER_REQUIRED` y `MEMBER_ACCESS_DENIED`.
 
 ## 4. Estado de miembros e invitaciones
 
