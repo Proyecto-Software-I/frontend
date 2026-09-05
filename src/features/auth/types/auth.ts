@@ -19,12 +19,14 @@ export interface Membership {
   status: string;
   organization: Organization;
   roles: string[];
+  permissions: string[];
 }
 
 export interface ActiveMembership {
   id: string;
   status: string;
   roles: string[];
+  permissions: string[];
 }
 
 export interface AuthTokens {
@@ -84,7 +86,9 @@ export function isMembership(value: unknown): value is Membership {
     isNonEmptyString(value.status) &&
     isOrganization(value.organization) &&
     Array.isArray(value.roles) &&
-    value.roles.every((role) => typeof role === "string")
+    value.roles.every((role) => typeof role === "string") &&
+    Array.isArray(value.permissions) &&
+    value.permissions.every((permission) => typeof permission === "string")
   );
 }
 
@@ -106,6 +110,8 @@ function isActiveMembership(value: unknown): value is ActiveMembership {
     isNonEmptyString(value.status) &&
     Array.isArray(value.roles) &&
     value.roles.every((role) => typeof role === "string") &&
+    Array.isArray(value.permissions) &&
+    value.permissions.every((permission) => typeof permission === "string") &&
     !("organization" in value)
   );
 }
@@ -171,7 +177,8 @@ function isCoherentSessionContext(
     matchingMembership.organization.name === activeOrganization.name &&
     matchingMembership.organization.slug === activeOrganization.slug &&
     activeMembership.status === ACTIVE_MEMBERSHIP_STATUS &&
-    sameStringArray(matchingMembership.roles, activeMembership.roles)
+    sameStringArray(matchingMembership.roles, activeMembership.roles) &&
+    sameStringArray(matchingMembership.permissions, activeMembership.permissions)
   );
 }
 

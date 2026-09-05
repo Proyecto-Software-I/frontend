@@ -10,6 +10,7 @@ export function sessionWithMemberships(
     id: `membership-${index + 1}`, status: membershipStatus,
     organization: { id: `organization-${index + 1}`, name: `Organization ${index + 1}`, slug: `organization-${index + 1}` },
     roles: ["member"],
+    permissions: ["organization.read"],
   }));
   const selected = memberships[0];
   const hasActiveMembership = membershipStatus === "ACTIVE";
@@ -22,7 +23,12 @@ export function sessionWithMemberships(
     activeMembership: requiresOrganizationSelection || !hasActiveMembership
       ? null
       : selected
-        ? { id: selected.id, status: selected.status, roles: selected.roles }
+        ? {
+            id: selected.id,
+            status: selected.status,
+            roles: selected.roles,
+            permissions: selected.permissions,
+          }
         : null,
     memberships,
     requiresOrganizationSelection,
@@ -41,14 +47,27 @@ export function selectedSessionWithMultipleMemberships(
 ): FullSession {
   const session = sessionWithMemberships(2, false, accessToken);
   session.memberships = [
-    { id: "membership123", status: "ACTIVE", organization: { id: "org123", name: "Organization 123", slug: "organization-123" }, roles: ["OWNER"] },
-    { id: "membership321", status: "ACTIVE", organization: { id: "org321", name: "Organization 321", slug: "organization-321" }, roles: [] },
+    {
+      id: "membership123",
+      status: "ACTIVE",
+      organization: { id: "org123", name: "Organization 123", slug: "organization-123" },
+      roles: ["OWNER"],
+      permissions: ["members.read", "members.manage"],
+    },
+    {
+      id: "membership321",
+      status: "ACTIVE",
+      organization: { id: "org321", name: "Organization 321", slug: "organization-321" },
+      roles: [],
+      permissions: ["members.read", "members.manage"],
+    },
   ];
   session.activeOrganization = session.memberships[1].organization;
   session.activeMembership = {
     id: session.memberships[1].id,
     status: session.memberships[1].status,
     roles: session.memberships[1].roles,
+    permissions: session.memberships[1].permissions,
   };
   return session;
 }

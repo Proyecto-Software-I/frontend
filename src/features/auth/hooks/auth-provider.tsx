@@ -37,11 +37,14 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
+  accessToken: string | null;
   signIn: (input: LoginInput) => Promise<void>;
   signUp: (input: RegisterInput) => Promise<void>;
   chooseOrganization: (organizationId: string) => Promise<void>;
+  refreshSession: () => Promise<void>;
   signOut: () => Promise<void>;
   clearNotice: () => void;
+  hasPermission: (permissionKey: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -218,14 +221,46 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   }
 
+  async function refreshSession(): Promise<void> {
+    const accessToken = authMemory.accessToken;
+    if (!accessToken) {
+      throw new Error("La sesión ya no está disponible.");
+    }
+
+    const operation = beginOperation();
+    const session = await getMe(accessToken);
+    if (authMemory.generation !== operation) {
+      return;
+    }
+
+    publish(
+      {
+        status: sessionStatus(session),
+        session,
+        notice: null,
+      },
+      accessToken,
+    );
+  }
+
+  function hasPermission(permissionKey: string): boolean {
+    return (
+      authMemory.state.session?.activeMembership?.permissions.includes(permissionKey)
+      ?? false
+    );
+  }
+
   return (
     <AuthContext.Provider
       value={{
         ...state,
+        accessToken: authMemory.accessToken,
         signIn,
         signUp,
         chooseOrganization,
+        refreshSession,
         signOut,
+        hasPermission,
         clearNotice: () => publish({ ...authMemory.state, notice: null }, authMemory.accessToken),
       }}
     >

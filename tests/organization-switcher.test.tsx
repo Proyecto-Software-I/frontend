@@ -26,6 +26,7 @@ vi.mock("@/features/auth/hooks/auth-provider", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mocks.replace }),
+  usePathname: () => "/dashboard",
 }));
 
 import { OrganizationSwitcher } from "@/features/workspace/components/organization-switcher";
@@ -58,6 +59,7 @@ describe("OrganizationSwitcher", () => {
       status: "INACTIVE",
       organization: { id: "inactive-organization", name: "Inactive organization", slug: "inactive-organization" },
       roles: ["OWNER"],
+      permissions: ["members.read", "members.manage"],
     });
     mocks.session = contextFromSession(session);
     await renderSwitcher();
@@ -133,6 +135,7 @@ describe("OrganizationSwitcher", () => {
       id: replacement.memberships[0].id,
       status: replacement.memberships[0].status,
       roles: replacement.memberships[0].roles,
+      permissions: replacement.memberships[0].permissions,
     };
     mocks.chooseOrganization.mockImplementation(async () => {
       mocks.publishSession?.(contextFromSession(replacement));
@@ -277,12 +280,14 @@ function sessionWithThreeActiveMemberships(): SessionContext {
     status: "ACTIVE",
     organization: { id: "org999", name: "Organization 999", slug: "organization-999" },
     roles: ["MEMBER"],
+    permissions: ["members.read"],
   });
   session.activeOrganization = session.memberships[2].organization;
   session.activeMembership = {
     id: session.memberships[2].id,
     status: session.memberships[2].status,
     roles: session.memberships[2].roles,
+    permissions: session.memberships[2].permissions,
   };
   return contextFromSession(session);
 }

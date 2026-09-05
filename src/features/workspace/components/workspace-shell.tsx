@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -173,6 +173,7 @@ export function WorkspaceShell({
                 />
               </div>
               <WorkspaceNavigation
+                session={session}
                 onNavigate={() => setMobileNavigationOpen(false)}
               />
             </div>
@@ -197,7 +198,7 @@ export function WorkspaceShell({
 
       <div className="flex min-h-[calc(100svh-4.5rem)]">
         <aside className="hidden w-72 shrink-0 border-r border-background/20 md:flex md:flex-col">
-          <WorkspaceNavigation />
+          <WorkspaceNavigation session={session} />
         </aside>
 
         <main id="workspace-main" className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">
@@ -219,35 +220,49 @@ export function WorkspaceShell({
   );
 }
 
-const navigationItems = [
-  { label: "Dashboard", icon: "dashboard", active: true },
-  { label: "Proyectos", icon: "folder", active: false },
-  { label: "Sistemas", icon: "account_tree", active: false },
-  { label: "Análisis", icon: "analytics", active: false },
-  { label: "Modernización", icon: "auto_fix_high", active: false },
+const primaryNavigationItems = [
+  { label: "Dashboard", icon: "dashboard", href: "/dashboard", enabled: true },
+  { label: "Proyectos", icon: "folder", enabled: false },
+  { label: "Sistemas", icon: "account_tree", enabled: false },
+  { label: "Análisis", icon: "analytics", enabled: false },
+  { label: "Modernización", icon: "auto_fix_high", enabled: false },
 ] as const;
 
-const supportItems = [
+const supportNavigationItems = [
   { label: "Soporte", icon: "help" },
   { label: "Documentación", icon: "description" },
 ] as const;
 
 function WorkspaceNavigation({
+  session,
   onNavigate,
-}: Readonly<{ onNavigate?: () => void }>) {
+}: Readonly<{
+  session: NonNullable<ReturnType<typeof useAuth>["session"]>;
+  onNavigate?: () => void;
+}>) {
+  const pathname = usePathname();
+  const canReadMembers = session.activeMembership.permissions.includes("members.read");
+  const secondaryItems = canReadMembers
+    ? [{ label: "Roles & permisos", icon: "admin_panel_settings", href: "/settings/roles" }]
+    : [];
+
   return (
     <nav
       aria-label="Navegación del workspace"
       className="flex min-h-full flex-col gap-8 p-3"
     >
       <ul className="grid gap-1">
-        {navigationItems.map((item) => (
+        {primaryNavigationItems.map((item) => (
           <li key={item.label}>
-            {item.active ? (
+            {item.enabled && item.href ? (
               <Link
-                href="/dashboard"
+                href={item.href}
                 onClick={onNavigate}
-                className="flex items-center gap-3 border-l-2 border-primary bg-background/10 px-4 py-3 text-sm font-medium text-background outline-none transition hover:bg-background/15 focus-visible:ring-3 focus-visible:ring-ring/50"
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium text-background outline-none transition hover:bg-background/15 focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                  pathname === item.href
+                    ? "border-l-2 border-primary bg-background/10"
+                    : "border-l-2 border-transparent"
+                }`}
               >
                 <span className="material-symbols-outlined text-xl" aria-hidden="true">
                   {item.icon}
@@ -269,8 +284,34 @@ function WorkspaceNavigation({
         ))}
       </ul>
 
+      {secondaryItems.length > 0 ? (
+        <ul className="grid gap-1 border-t border-background/20 pt-4">
+          <li className="px-4 pt-1 pb-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-background/55">
+            Settings
+          </li>
+          {secondaryItems.map((item) => (
+            <li key={item.label}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium text-background outline-none transition hover:bg-background/15 focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                  pathname === item.href
+                    ? "border-l-2 border-primary bg-background/10"
+                    : "border-l-2 border-transparent"
+                }`}
+              >
+                <span className="material-symbols-outlined text-xl" aria-hidden="true">
+                  {item.icon}
+                </span>
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       <ul className="mt-auto grid gap-1 border-t border-background/20 pt-4">
-        {supportItems.map((item) => (
+        {supportNavigationItems.map((item) => (
           <li key={item.label}>
             <span
               aria-disabled="true"
