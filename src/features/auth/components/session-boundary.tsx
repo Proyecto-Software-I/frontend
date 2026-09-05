@@ -2,8 +2,9 @@
 
 import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { getValidInvitationReturnTo } from "../lib/invitation-return";
 import { useAuth } from "../hooks/auth-provider";
 
 const protectedPaths = new Set(["/dashboard", "/auth/select-organization"]);
@@ -12,9 +13,11 @@ const entryPaths = new Set(["/auth/login", "/auth/register"]);
 export function SessionBoundary({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { notice, status } = useAuth();
   const isProtected = protectedPaths.has(pathname);
   const isEntry = entryPaths.has(pathname);
+  const invitationReturnTo = getValidInvitationReturnTo(searchParams.get("returnTo"));
 
   useEffect(() => {
     if (status === "bootstrapping") {
@@ -37,9 +40,12 @@ export function SessionBoundary({ children }: Readonly<{ children: ReactNode }>)
     }
 
     if (isEntry && (status === "authenticated" || status === "selection-required")) {
-      router.replace(status === "selection-required" ? "/auth/select-organization" : "/dashboard");
+      router.replace(
+        invitationReturnTo ??
+          (status === "selection-required" ? "/auth/select-organization" : "/dashboard"),
+      );
     }
-  }, [isEntry, isProtected, pathname, router, status]);
+  }, [invitationReturnTo, isEntry, isProtected, pathname, router, status]);
 
   if (status === "bootstrapping" || (isProtected && status === "anonymous")) {
     return <SessionLoading />;

@@ -1,4 +1,5 @@
 import { act, useEffect, useReducer } from "react";
+import { readFileSync } from "node:fs";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -12,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   chooseOrganization: vi.fn(),
   publishSession: null as ((session: SessionContext) => void) | null,
   replace: vi.fn(),
+  pathname: "/dashboard",
   session: null as SessionContext | null,
   signOut: vi.fn(),
 }));
@@ -20,11 +22,14 @@ vi.mock("@/features/auth/hooks/auth-provider", () => ({
   useAuth: () => ({
     session: mocks.session,
     chooseOrganization: mocks.chooseOrganization,
+    hasPermission: (permission: string) =>
+      mocks.session?.activeMembership?.permissions.includes(permission) ?? false,
     signOut: mocks.signOut,
   }),
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => mocks.pathname,
   useRouter: () => ({ replace: mocks.replace }),
 }));
 
@@ -36,6 +41,7 @@ describe("OrganizationSwitcher", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     mocks.chooseOrganization.mockReset();
+    mocks.pathname = "/dashboard";
     mocks.publishSession = null;
     mocks.replace.mockReset();
     mocks.signOut.mockReset();
@@ -43,11 +49,7 @@ describe("OrganizationSwitcher", () => {
   });
 
   afterEach(async () => {
-    await act(async () => {
-      while (mountedRoots.length > 0) {
-        mountedRoots.pop()?.unmount();
-      }
-    });
+    await cleanupMountedRoots();
     document.body.innerHTML = "";
   });
 
@@ -133,6 +135,7 @@ describe("OrganizationSwitcher", () => {
       id: replacement.memberships[0].id,
       status: replacement.memberships[0].status,
       roles: replacement.memberships[0].roles,
+      permissions: ["organization.read", "members.read", "members.manage"],
     };
     mocks.chooseOrganization.mockImplementation(async () => {
       mocks.publishSession?.(contextFromSession(replacement));
@@ -173,6 +176,36 @@ describe("OrganizationSwitcher", () => {
     expect(document.querySelector('[role="menu"]')).not.toBeNull();
     expect(mocks.replace).not.toHaveBeenCalled();
   });
+
+  it("shows the group icon and Miembros navigation only with members.read on desktop and mobile", async () => {
+    mocks.pathname = "/settings/members";
+    await renderWorkspace();
+
+    const membersLink = document.querySelector<HTMLAnchorElement>('a[href="/settings/members"]');
+    const dashboardLink = document.querySelector<HTMLAnchorElement>('a[href="/dashboard"]');
+    expect(membersLink?.textContent).toContain("Miembros");
+    expect(membersLink?.textContent).not.toContain("GROUP");
+    expect(membersLink?.getAttribute("aria-current")).toBe("page");
+    expect(dashboardLink?.getAttribute("aria-current")).toBeNull();
+    expect(readFileSync("src/app/layout.tsx", "utf8")).toContain("folder,group,help");
+
+    await clickButton("Abrir navegación");
+    const mobileMembersLink = document.querySelector<HTMLAnchorElement>("#workspace-mobile-navigation a[href='/settings/members']");
+    expect(mobileMembersLink?.textContent).toContain("Miembros");
+    expect(mobileMembersLink?.textContent).not.toContain("GROUP");
+
+    await cleanupMountedRoots();
+    const session = selectedSessionWithMultipleMemberships();
+    session.activeMembership = session.activeMembership
+      ? { ...session.activeMembership, permissions: ["organization.read"] }
+      : null;
+    mocks.session = contextFromSession(session);
+    mocks.pathname = "/dashboard";
+    await renderWorkspace();
+
+    expect(document.querySelector('a[href="/settings/members"]')).toBeNull();
+    expect(document.body.textContent).not.toContain("Miembros");
+  });
 });
 
 async function renderSwitcher(): Promise<void> {
@@ -192,6 +225,14 @@ async function renderWorkspace(): Promise<void> {
   mountedRoots.push(root);
   await act(async () => {
     root.render(<AuthSessionHarness />);
+  });
+}
+
+async function cleanupMountedRoots(): Promise<void> {
+  await act(async () => {
+    while (mountedRoots.length > 0) {
+      mountedRoots.pop()?.unmount();
+    }
   });
 }
 
@@ -283,6 +324,7 @@ function sessionWithThreeActiveMemberships(): SessionContext {
     id: session.memberships[2].id,
     status: session.memberships[2].status,
     roles: session.memberships[2].roles,
+    permissions: ["organization.read", "members.read"],
   };
   return contextFromSession(session);
 }

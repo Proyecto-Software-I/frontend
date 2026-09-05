@@ -40,6 +40,7 @@ export function Field({
   error,
   describedBy,
   autoComplete,
+  readOnly = false,
 }: Readonly<{
   id: string;
   label: string;
@@ -49,6 +50,7 @@ export function Field({
   error?: string;
   describedBy?: string;
   autoComplete?: string;
+  readOnly?: boolean;
 }>) {
   const errorId = `${id}-error`;
 
@@ -64,6 +66,7 @@ export function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         autoComplete={autoComplete}
+        readOnly={readOnly}
         aria-invalid={Boolean(error)}
         aria-describedby={[describedBy, error ? errorId : undefined].filter(Boolean).join(" ") || undefined}
         className="h-10 w-full rounded-lg border border-background/30 bg-background/10 px-3 text-sm text-background placeholder:text-background/70 outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"

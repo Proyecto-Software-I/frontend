@@ -5,6 +5,7 @@ export function sessionWithMemberships(
   requiresOrganizationSelection = count > 1,
   accessToken = "access-token-1",
   membershipStatus = "ACTIVE",
+  permissions: string[] = ["organization.read", "members.read"],
 ): FullSession {
   const memberships = Array.from({ length: count }, (_, index) => ({
     id: `membership-${index + 1}`, status: membershipStatus,
@@ -22,7 +23,7 @@ export function sessionWithMemberships(
     activeMembership: requiresOrganizationSelection || !hasActiveMembership
       ? null
       : selected
-        ? { id: selected.id, status: selected.status, roles: selected.roles }
+        ? { id: selected.id, status: selected.status, roles: selected.roles, permissions }
         : null,
     memberships,
     requiresOrganizationSelection,
@@ -49,6 +50,7 @@ export function selectedSessionWithMultipleMemberships(
     id: session.memberships[1].id,
     status: session.memberships[1].status,
     roles: session.memberships[1].roles,
+    permissions: ["organization.read", "members.read", "members.manage"],
   };
   return session;
 }
