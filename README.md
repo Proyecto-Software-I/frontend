@@ -154,12 +154,15 @@ Respuesta esperada:
 | `npm run build` | Genera la compilación de producción |
 | `npm run start` | Ejecuta la compilación en el puerto 3001 |
 | `npm run lint` | Analiza el código con ESLint |
+| `npm test` | Ejecuta la suite de pruebas una vez |
+| `npm run test:watch` | Ejecuta la suite en modo observación |
 
 ## Verificación
 
 ```bash
 npm run spec:validate
 npm run lint
+npm test
 npm run build
 npm run check
 ```
@@ -179,7 +182,7 @@ PR -> main
 
 Cada validacion se ejecuta como un paso separado para identificar con claridad que parte falla. El workflow falla si falla cualquiera de estos comandos.
 
-Actualmente no existe una suite automatizada de pruebas configurada, por lo que el CI no ejecuta `npm test`. Cuando se incorpore una suite aplicable, el workflow debera actualizarse en la issue correspondiente.
+La suite automatizada se ejecuta mediante `npm test` y también forma parte de `npm run check`.
 
 El despliegue automatico (CD) **no esta configurado actualmente**. La estrategia de hosting, previews y despliegue a produccion se definira en una issue y un cambio OpenSpec futuros cuando el proyecto lo necesite.
 ## Contribución
