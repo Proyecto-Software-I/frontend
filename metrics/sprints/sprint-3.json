@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "repository": "Proyecto-Software-I/frontend",
   "scope": "sprint",
-  "generatedAt": "2026-09-28T10:46:04.567077Z",
+  "generatedAt": "2026-10-12T11:51:12.089210Z",
   "sprint": {
     "id": "sprint-3",
     "number": 3,
@@ -13,5 +13,5 @@
   "totalPoints": 0,
   "awards": 0,
   "contributors": [],
-  "status": "active"
+  "status": "completed"
 }
